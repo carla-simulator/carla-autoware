@@ -1,0 +1,12 @@
+<launch>
+
+<!-- TF -->
+<include file="$(env CARLA_AUTOWARE_ROOT)/autoware_launch/tf.launch"/>
+
+<!-- Point Cloud -->
+<node pkg="map_file" type="points_map_loader" name="points_map_loader" args="noupdate $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/map.pcd"/>
+
+<!-- Vector Map -->
+<node pkg="map_file" type="vector_map_loader" name="vector_map_loader" args="$(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/point.csv $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/dtlane.csv $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/lane.csv"/>
+
+</launch>

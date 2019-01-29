@@ -1,0 +1,6 @@
+build/
+devel/
+install/
+src/CMakeLists.txt
+.catkin_workspace
+src/ros-bridge

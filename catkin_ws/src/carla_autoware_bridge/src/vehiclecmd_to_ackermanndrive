@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+import rospy, math
+from ackermann_msgs.msg import AckermannDrive
+from autoware_msgs.msg import VehicleCmd
+
+pub = rospy.Publisher("/carla/ego_vehicle/ackermann_cmd", AckermannDrive, queue_size=1)
+wheelbase = 3.0
+
+def convert_trans_rot_vel_to_steering_angle(v, omega, wheelbase):
+    if omega == 0 or v == 0:
+      return 0
+    radius = v / omega
+    return math.atan(wheelbase / radius)
+
+def callback(data):
+    global wheelbase
+    msg = AckermannDrive()
+    msg.speed = data.twist_cmd.twist.linear.x
+    msg.steering_angle = convert_trans_rot_vel_to_steering_angle(msg.speed, data.twist_cmd.twist.angular.z, wheelbase)
+    pub.publish(msg)
+
+def twist_to_ackermanndrive():
+    rospy.init_node('twist_to_ackermanndrive')
+    wheelbase = rospy.get_param('~wheelbase', 3.0)
+    rospy.Subscriber("/vehicle_cmd", VehicleCmd, callback, queue_size=1)
+    rospy.spin()
+
+if __name__ == '__main__':
+    twist_to_ackermanndrive()

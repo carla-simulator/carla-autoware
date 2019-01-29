@@ -1,0 +1,30 @@
+<launch>
+  <!-- the mission is published by the carla_autoware_waypoint_publisher -->
+
+  <!-- setting path parameter -->
+  <arg name="topic_pose_stamped" default="/ndt_pose" />
+  <arg name="topic_twist_stamped" default="/estimate_twist" />
+
+  <!-- vel_pose_mux -->
+  <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
+    <arg name="topic_pose_stamped" value="$(arg topic_pose_stamped)" />
+    <arg name="topic_twist_stamped" value="$(arg topic_twist_stamped)" />
+  </include>
+
+  <node pkg="waypoint_maker" type="waypoint_marker_publisher" name="waypoint_marker_publisher" output="screen"/>
+
+  <!-- lane_navi -->
+  <!--
+  <node pkg="lane_planner" type="lane_navi" name="lane_navi" />
+  -->
+
+  <!-- lane_rule -->
+  <node pkg="lane_planner" type="lane_rule" name="lane_rule" />
+
+  <!-- lane_stop -->
+  <node pkg="lane_planner" type="lane_stop" name="lane_stop" />
+
+  <!-- lane_select -->
+  <node pkg="lane_planner" type="lane_select" name="lane_select" />
+
+</launch>
