@@ -25,7 +25,7 @@ class CarlaToAutowareWaypointConverter(object):
     
     The calculation is done whenever the hero vehicle appears.
     """
-    WAYPOINT_DISTANCE = 1.2
+    WAYPOINT_DISTANCE = 2.0
     
     def __init__(self, carla_world):
         self._world = carla_world

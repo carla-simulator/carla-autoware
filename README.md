@@ -1,4 +1,4 @@
-# carla-autoware
+# Autoware in Carla
 Integration of AutoWare AV software with the CARLA simulator
 
 ## Requirements
@@ -6,6 +6,12 @@ Integration of AutoWare AV software with the CARLA simulator
 - ROS kinetic
 - Autoware (tested with 1.9.1)
 - PointCloud Map (see [Map Creation](docs/map_creation.md))
+
+
+## Opens
+
+- currently no image-based detections (e.g. traffic lights)
+- vehicle control is not optimal yet (depending on vehicle)
 
 
 ## Setup
@@ -35,6 +41,14 @@ The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspa
     catkin_make
 
 ## Run
+
+To run Autoware within Carla please use the following execution order:
+
+1. Carla Server
+2. Carla Client
+3. Autoware Runtime Manager
+4. Carla Autoware Bridge
+5. Autoware Stack
 
 You need three terminals:
 
