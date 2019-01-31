@@ -10,7 +10,8 @@ Integration of AutoWare AV software with the CARLA simulator
 
 ## Opens
 
-- currently no image-based detections (e.g. traffic lights)
+- object detection (especially traffic lights)
+- no compliance with traffic rules (due to missing vector map)
 - vehicle control is not optimal yet (depending on vehicle)
 
 
