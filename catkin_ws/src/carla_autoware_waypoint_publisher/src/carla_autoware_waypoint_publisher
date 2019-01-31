@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+
+#
+# Copyright (c) 2019 Intel Labs.
+#
+# authors: Frederik Pasch (frederik.pasch@intel.com)
+#
+import rospy
+import carla
+
+import tf
+import math
+import threading
+
+from agents.navigation.local_planner import compute_connection, RoadOption
+
+from autoware_msgs.msg import LaneArray
+from autoware_msgs.msg import Lane
+from autoware_msgs.msg import Waypoint
+
+
+class CarlaToAutowareWaypointConverter(object):
+    """
+    This class generates a random plan of waypoints to follow.
+    
+    The calculation is done whenever the hero vehicle appears.
+    """
+    WAYPOINT_DISTANCE = 1.2
+    
+    def __init__(self, carla_world):
+        self._world = carla_world
+        self._map = carla_world.get_map()
+        self._vehicle = None
+        self._pub = rospy.Publisher('/lane_waypoints_array', LaneArray, queue_size=10, latch=True)
+        
+        rospy.loginfo("Waiting for hero vehicle...")
+        self._update_lock = threading.Lock()
+        
+        #use callback to wait for hero vehicle
+        self._world.on_tick(self._carla_time_tick)
+
+
+    def _carla_time_tick(self, carla_timestamp):
+        if self._update_lock.acquire():
+            hero = None
+            for actor in self._world.get_actors():
+                if (actor.attributes.get('role_name') == "hero"):
+                    hero = actor
+            
+            if self._vehicle is None and hero is not None:
+                self._vehicle = hero
+                rospy.loginfo("Discovered new hero vehicle.")
+                rospy.loginfo("Calculating random waypoint plan...")
+                spawn_point = self._world.get_map().get_spawn_points()[0]
+                self._current_plan = self.set_destination((spawn_point.location.x,
+                                       spawn_point.location.y,
+                                       spawn_point.location.z))
+                
+                rospy.loginfo("Publishing waypoints...")
+                self.publish_waypoints()
+            elif self._vehicle is not None and hero is None:
+                rospy.loginfo("Hero vehicle disappeared. Removing plan...")
+                self._vehicle = None
+                self._current_plan = None
+                self.publish_waypoints()
+            
+            self._update_lock.release()
+        
+
+    def set_destination(self, location):
+        """
+        This function is based on basic_planner.set_destination()
+        """
+        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        end_waypoint = self._map.get_waypoint(carla.Location(location[0],
+                                                             location[1],
+                                                             location[2]))
+  
+        current_waypoint = start_waypoint
+        active_list = [ [(current_waypoint, RoadOption.LANEFOLLOW)] ]
+  
+        solution = []
+        while not solution:
+            for _ in range(len(active_list)):
+                trajectory = active_list.pop()
+                if len(trajectory) > 1000:
+                    continue
+  
+                # expand this trajectory
+                current_waypoint, _ = trajectory[-1]
+                next_waypoints = current_waypoint.next(self.WAYPOINT_DISTANCE)
+                while len(next_waypoints) == 1:
+                    next_option = compute_connection(current_waypoint, next_waypoints[0])
+                    current_distance = next_waypoints[0].transform.location.distance(end_waypoint.transform.location)
+                    if current_distance < self.WAYPOINT_DISTANCE:
+                        solution = trajectory + [(end_waypoint, RoadOption.LANEFOLLOW)]
+                        break
+  
+                    # keep adding nodes
+                    trajectory.append((next_waypoints[0], next_option))
+                    current_waypoint, _ = trajectory[-1]
+                    next_waypoints = current_waypoint.next(self.WAYPOINT_DISTANCE)
+  
+                if not solution:
+                    # multiple choices
+                    for waypoint in next_waypoints:
+                        next_option = compute_connection(current_waypoint, waypoint)
+                        active_list.append(trajectory + [(waypoint, next_option)])
+  
+        assert solution
+        return solution
+  
+ 
+    def publish_waypoints(self):
+        msg = LaneArray()
+        lane = Lane()
+        lane.header.frame_id = "/map"
+        msg.lanes.append(lane)
+        if self._current_plan is not None:
+            for wp in self._current_plan:
+                waypoint = Waypoint()
+                waypoint.pose.pose.position.x = wp[0].transform.location.x
+                waypoint.pose.pose.position.y = -wp[0].transform.location.y
+                waypoint.pose.pose.position.z = wp[0].transform.location.z
+    
+                quaternion = tf.transformations.quaternion_from_euler(0, 0, -math.radians(wp[0].transform.rotation.yaw))
+                waypoint.pose.pose.orientation.x = quaternion[0]
+                waypoint.pose.pose.orientation.y = quaternion[1]
+                waypoint.pose.pose.orientation.z = quaternion[2]
+                waypoint.pose.pose.orientation.w = quaternion[3]
+                msg.lanes[0].waypoints.append(waypoint)
+                #file format for autoware waypoint loader:
+                #print("{},{},{},{},0,0\n".format(wp[0].transform.location.x,-wp[0].transform.location.y,38.1,math.radians(wp[0].transform.rotation.yaw)))
+
+        self._pub.publish(msg)
+        rospy.loginfo("Published {} waypoints.".format(len(msg.lanes[0].waypoints)))
+
+
+def main():
+
+    rospy.init_node("carla_waypoint_publisher", anonymous=True)
+
+    host = "localhost"
+    port = 2000
+
+    rospy.loginfo("Trying to connect to {host}:{port}".format(
+        host=host, port=port))
+
+    try:
+        carla_client = carla.Client(host=host, port=port)
+        carla_client.set_timeout(2)
+
+        carla_world = carla_client.get_world()
+        
+        rospy.loginfo("Connected to Carla.")
+
+        waypointConverter = CarlaToAutowareWaypointConverter(carla_world)
+
+        rospy.spin()
+        del waypointConverter
+        del carla_world
+        del carla_client
+
+    finally:
+        rospy.loginfo("Done")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,16 @@
+<!---->
+<launch>
+
+<!-- world to map tf -->
+<node pkg="tf"  type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 /world /map 10" />
+
+<!-- map to mobility tf -->
+<node pkg="tf"  type="static_transform_publisher" name="map_to_mobility" args="0 0 0 0 0 0 /map /mobility 10" />
+
+<!-- ego_vehicle to base_link tf -->
+<node pkg="tf"  type="static_transform_publisher" name="egovehicle_to_baselink" args="0 0 0 0 0 0 /ego_vehicle /base_link 10" />
+
+<!-- ego_vehicle to gps tf -->
+<node pkg="tf"  type="static_transform_publisher" name="egovehicle_to_gps" args="0 0 0 0 0 0 /ego_vehicle /gps 10" />
+
+</launch>

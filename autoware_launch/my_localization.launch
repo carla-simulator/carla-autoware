@@ -1,0 +1,47 @@
+<launch>
+
+  <!-- setting path parameter -->
+  <arg name="get_height" value="true" />
+
+  <!-- Setup -->
+  <arg name="x" value="1" />
+  <arg name="y" value="0.0" />
+  <arg name="z" value="2" />
+  <arg name="yaw" value="0.0" />
+  <arg name="pitch" value="0.0" />
+  <arg name="roll" value="0.0" />
+  <arg name="frame_id" value="/base_link" />
+  <arg name="child_frame_id" value="/velodyne" />
+  <arg name="period_in_ms" value="10" />
+
+  <!-- tf parameters for ndt_matching -->
+  <param name="tf_x" value="$(arg x)" />
+  <param name="tf_y" value="$(arg y)" />
+  <param name="tf_z" value="$(arg z)" />
+  <param name="tf_yaw" value="$(arg yaw)" />
+  <param name="tf_pitch" value="$(arg pitch)" />
+  <param name="tf_roll" value="$(arg roll)" />
+  <param name="localizer" value="velodyne" />
+
+  <include file="$(find runtime_manager)/scripts/setup_tf.launch">
+    <arg name="x" value="$(arg x)" />
+    <arg name="y" value="$(arg y)" />
+    <arg name="z" value="$(arg z)" />
+    <arg name="yaw" value="$(arg yaw)" />
+    <arg name="pitch" value="$(arg pitch)" />
+    <arg name="roll" value="$(arg roll)" />
+    <arg name="frame_id" value="$(arg frame_id)" />
+    <arg name="child_frame_id" value="$(arg child_frame_id)" />
+    <arg name="period_in_ms" value="$(arg period_in_ms)" />
+  </include>
+  <include file="$(find model_publisher)/launch/vehicle_model.launch" />
+
+  <!-- points downsampler -->
+  <include file="$(find points_downsampler)/launch/points_downsample.launch" />
+
+  <!-- ndt_matching -->
+  <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
+    <arg name="get_height" value="$(arg get_height)" />
+  </include>
+
+</launch>
