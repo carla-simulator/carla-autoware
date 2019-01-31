@@ -2,14 +2,10 @@
 
 Autoware uses a pointcloud map. You can easily create it by manually driving around in Carla.
 
-## Build
+## Setup
 
-Additionally to the general setup, include the ROS package pcl_recorder into your catkin workspace.
+See setup of carla-autoware.
 
-    cd <catkin_workspace>/src
-    ln -s ../../pcl_recorder
-    cd ../..
-    catkin_make
 
 ## Run
 
@@ -23,11 +19,13 @@ Execute the Carla Simulator and an Ego Vehicle.
     #Terminal 2
 
     #create Carla ego vehicle (BMW Isetta, to not have reflection of the roof)
+    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg
     ./carla_autoware_control.py --filter vehicle.bmw.isetta
 
+    #Terminal 3
 
-Execute the following to capture single point clouds within the /tmp/pcl_capture directory. The ROS bridge is executed implicitly.
-
+    source ~/carla-autoware/catkin_ws/devel/setup
+    #Execute the following to capture single point clouds within the /tmp/pcl_capture directory
     roslaunch pcl_recorder pcl_recorder.launch
 
 
