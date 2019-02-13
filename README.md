@@ -19,7 +19,7 @@ Integration of AutoWare AV software with the CARLA simulator
 
 ### Autoware
 
-Setup/build Autware as described here: https://github.com/CPFL/Autoware
+Setup/build Autoware as described here: https://github.com/CPFL/Autoware
 
 ### Carla
 
@@ -29,14 +29,16 @@ Download version of Carla from here: https://github.com/carla-simulator/carla
 ### Carla Autoware Bridge
 
 The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspace (containing all relevant packages).
+The generic Carla ROS bridge (https://github.com/carla-simulator/ros-bridge.git) is included as GIT submodule and 
+has to be initialized ("git submodule update --init") and updated ("git submodule update").
 
     cd ~
-    git clone https://github.com/carla-simulator/ros-bridge.git
     git lfs clone https://github.com/carla-simulator/carla-autoware.git
-    cd carla-autoware/catkin_ws
+    cd carla-autoware
+    git submodule update --init
+    cd catkin_ws
     catkin_init_workspace src/
     cd src
-    ln -s ../../../ros-bridge
     ln -s <path-to-autoware>/ros/src/msgs/autoware_msgs
     cd ..
     catkin_make

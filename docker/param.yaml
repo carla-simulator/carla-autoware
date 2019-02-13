@@ -1,0 +1,13 @@
+detection_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_detection.launch
+localization_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_localization.launch
+map_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_map.launch
+mission_planning_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_mission_planning.launch
+motion_planning_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_motion_planning.launch
+sensing_qs:
+  file: /home/autoware/carla-autoware/autoware_launch/my_sensing.launch
+
