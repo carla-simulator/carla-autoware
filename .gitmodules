@@ -1,0 +1,3 @@
+[submodule "catkin_ws/src/ros-bridge"]
+	path = catkin_ws/src/ros-bridge
+	url = ../ros-bridge.git
