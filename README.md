@@ -67,7 +67,15 @@ You need three terminals:
 
     #create Carla ego vehicle
     export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg
+
+    # either start a background carla client
+    # A special camera is positioned behind the car to see the environment
+    # You can subscribe to it via
+    # /carla/ego_vehicle/camera/rgb/viewFromBehind/image_color
     ./carla_autoware_control.py --filter vehicle.tesla.model3
+
+    # or start a client in a separate window (with additional control via keyboard)
+    ./carla_autoware_manual_control.py --filter vehicle.tesla.model3
 
 
     #Terminal 3
