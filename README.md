@@ -48,6 +48,51 @@ has to be initialized ("git submodule update --init") and updated ("git submodul
 To run Autoware within Carla please use the following execution order:
 
 1. Carla Server
+2. Autoware Runtime Manager
+3. Carla Autoware Bridge
+4. Autoware Stack
+
+You need two terminals:
+
+    #Terminal 1
+
+    #execute Carla
+    SDL_VIDEODRIVER=offscreen <path-to-carla>/CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -fps=10
+
+
+    #Terminal 2
+
+    export CARLA_AUTOWARE_ROOT=~/carla-autoware
+    
+    #execute Autoware (forks into background)
+    <path-to-autoware>/ros/run
+
+    #execute carla-autoware-bridge and carla-autoware-bridge
+    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
+    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
+    roslaunch carla_autoware_bridge carla_autoware_bridge.launch
+
+In Autoware Runtime Manager, select the customized launch files:
+
+![Autoware Runtime Manager Settings](docs/images/autoware-runtime-manager-settings.png)
+
+In Autoware Runtime Manager, start rviz and open the configuration <autoware-dir>/ros/src/.config/rviz/default.rviz
+
+Now you can start the Autoware Stack by starting all launch files from top to bottom. The car should start moving.
+
+![Autoware Runtime Manager Settings](docs/images/autoware-rviz-carla-town01-running.png)
+
+
+A special camera is positioned behind the car to see the car and its environment.
+You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
+
+### Run with controllable Carla client
+
+It is also possible to run a Carla client, that can additionally be controlled by keyboard.
+
+The execution order:
+
+1. Carla Server
 2. Carla Client
 3. Autoware Runtime Manager
 4. Carla Autoware Bridge
@@ -65,9 +110,9 @@ You need three terminals:
 
     cd ~/carla-autoware
 
-    #create Carla ego vehicle
+    #execute Carla ego vehicle client
     export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg
-    ./carla_autoware_control.py --filter vehicle.tesla.model3
+    ./catkin_ws/src/carla_client/src/carla_autoware_manual_control.py --filter vehicle.toyota.prius*
 
 
     #Terminal 3
@@ -82,13 +127,3 @@ You need three terminals:
     source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
     roslaunch carla_autoware_bridge carla_autoware_bridge.launch
     
-In Autoware Runtime Manager, select the customized launch files:
-
-![Autoware Runtime Manager Settings](docs/images/autoware-runtime-manager-settings.png)
-
-In Autoware Runtime Manager, start rviz and open the configuration <autoware-dir>/ros/src/.config/rviz/default.rviz
-
-Now you can start the Autoware Stack by starting all launch files from top to bottom. The car should start moving.
-
-![Autoware Runtime Manager Settings](docs/images/autoware-rviz-carla-town01-running.png)
-
