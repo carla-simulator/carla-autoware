@@ -1,6 +1,9 @@
 <launch>
   <arg name="wheelbase" default="2.5" /> <!-- distance between front and back axle in meters -->
 
+  <!-- carla client -->
+  <include file="$(find carla_client)/launch/carla_client.launch" />
+
   <include file="$(find carla_ros_bridge)/client.launch" />
 
   <!-- remap carla lidar to autoware -->

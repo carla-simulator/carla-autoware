@@ -1,0 +1,19 @@
+<launch>
+  <param name="/carla/host" value="127.0.0.1" />
+  <param name="/carla/port" value="2000" />
+  <param name="/carla/client/vehicle_filter" value="vehicle.toyota.prius*" />
+  <param name="/carla/client/vehicle_filter" value="vehicle.toyota.prius*" />
+
+<!-- set fixed spawn_point (caution: once set, they keep existing between roslaunch executions)
+  <group ns="/carla/client/spawn_point">
+    <param name="X" value="0.0" />
+    <param name="Y" value="0.0" />
+    <param name="Z" value="39.0" />
+    <param name="Yaw" value="90.0" />
+  </group>
+-->
+
+  <node pkg="carla_client" type="carla_autoware_control" name="carla_autoware_control" output="screen"/>
+
+</launch>
+

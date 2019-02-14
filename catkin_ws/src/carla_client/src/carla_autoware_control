@@ -2,33 +2,20 @@
 
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
+# Copyright (c) 2019 Intel Labs.
+#
+# authors: Frederik Pasch (frederik.pasch@intel.com)
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Carla client for usage with Autoware
-# derived from manual_control.py
-
-"""
-Welcome to CARLA autoware control.
-"""
-
 from __future__ import print_function
 
-from time import sleep
-import signal
+import rospy
 import sys
-import argparse
 import glob
-import logging
 import os
 import random
-
-try:
-    import numpy as np
-except ImportError:
-    raise RuntimeError(
-        'cannot import numpy, make sure numpy package is installed')
 
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
@@ -46,7 +33,6 @@ import carla
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
-
 
 class World(object):
     def __init__(self, carla_world, actor_filter, actor_spawnpoint):
@@ -70,10 +56,10 @@ class World(object):
         # Spawn the player.
         if self._actor_spawnpoint:
             spawn_point = carla.Transform()
-            spawn_point.location.x = self._actor_spawnpoint[0]
-            spawn_point.location.y = self._actor_spawnpoint[1]
-            spawn_point.location.z = self._actor_spawnpoint[2]
-            spawn_point.rotation.yaw = self._actor_spawnpoint[3]
+            spawn_point.location.x = self._actor_spawnpoint['X']
+            spawn_point.location.y = self._actor_spawnpoint['Y']
+            spawn_point.location.z = self._actor_spawnpoint['Z']
+            spawn_point.rotation.yaw = self._actor_spawnpoint['Yaw']
             if self.player is not None:
                 self.destroy()
             while self.player is None:
@@ -107,7 +93,6 @@ class World(object):
         for actor in actors:
             if actor is not None:
                 actor.destroy()
-
 
 # ==============================================================================
 # -- GnssSensor ----------------------------------------------------------------
@@ -163,87 +148,47 @@ class ViewCamera(object):
         bp.set_attribute('role_name', 'viewFromBehind')
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)), attach_to=self._parent)
 
-
-# ==============================================================================
-# -- game_loop() ---------------------------------------------------------------
-# ==============================================================================
-
-def sigterm_handler(_signo, _stack_frame):
-    # Raises SystemExit(0):
-    sys.exit(0)
-
-def game_loop(args):
-    world = None
-    signal.signal(signal.SIGTERM, sigterm_handler)
-
-    try:
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
-
-        world = World(client.get_world(), args.filter, args.spawnpoint)
-
-        while True:
-            sleep(1)    
-
-    finally:
-
-        if world is not None:
-            world.destroy()
-
-
-
 # ==============================================================================
 # -- main() --------------------------------------------------------------------
 # ==============================================================================
 
-
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Autoware Control Client')
-    argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
-        help='print debug information')
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--spawnpoint',
-        nargs=4,
-        metavar='FLOAT',
-        type=float,
-        help='spawn point (X Y Z YAW, default: random predefined spawnpoints)')
-    args = argparser.parse_args()
+    rospy.init_node('carla_client')
 
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
+    host = rospy.get_param('/carla/host', '127.0.0.1')
+    port = rospy.get_param('/carla/port', '2000')
+    vehicle_filter = rospy.get_param('/carla/client/vehicle_filter', 'vehicle.*')
+    spawn_point = rospy.get_param('/carla/client/spawn_point',{})
 
-    logging.info('listening to server %s:%s', args.host, args.port)
-
-    print(__doc__)
+    rospy.loginfo('listening to server %s:%s', host, port)
+    rospy.loginfo('using vehicle filter: %s', vehicle_filter)
+    
+    if spawn_point:
+        rospy.loginfo('spawning at %s', spawn_point)
+    else:
+        rospy.loginfo('spawning at random point')
+    
+    world = None
 
     try:
+        client = carla.Client(host, port)
+        client.set_timeout(2.0)
 
-        game_loop(args)
+        world = World(client.get_world(), vehicle_filter, spawn_point)
 
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
+        while not rospy.is_shutdown():
+            rospy.sleep(1)
+
+    finally:
+
+        if world is not None:
+            rospy.loginfo('DELETING WORLD')
+
+            world.destroy()
 
 
 if __name__ == '__main__':
-
-    main()
+    try:
+        main()
+    except rospy.ROSInterruptException: pass
+        
