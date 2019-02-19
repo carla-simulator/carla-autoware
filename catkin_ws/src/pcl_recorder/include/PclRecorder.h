@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019 Intel Labs.
  *
- * authors: Frederik Pasch (frederik.pasch@intel.com)
+ * authors: Frederik Pasch
  */
 #pragma once
 

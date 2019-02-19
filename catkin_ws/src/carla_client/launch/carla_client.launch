@@ -2,9 +2,8 @@
   <param name="/carla/host" value="127.0.0.1" />
   <param name="/carla/port" value="2000" />
   <param name="/carla/client/vehicle_filter" value="vehicle.toyota.prius*" />
-  <param name="/carla/client/vehicle_filter" value="vehicle.toyota.prius*" />
 
-<!-- set fixed spawn_point (caution: once set, they keep existing between roslaunch executions)
+<!-- set fixed spawn_point (caution: once set, the parameters keep existing between roslaunch executions)
   <group ns="/carla/client/spawn_point">
     <param name="X" value="0.0" />
     <param name="Y" value="0.0" />

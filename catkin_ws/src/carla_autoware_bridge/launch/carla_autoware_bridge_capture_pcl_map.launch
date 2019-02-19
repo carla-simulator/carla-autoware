@@ -1,0 +1,15 @@
+<launch>
+
+  <param name="/carla/client/start_in_autopilot" value="True" /> <!-- for capturing the pcl map, the autopilot drives around -->
+
+  <!-- carla client -->
+  <include file="$(find carla_client)/launch/carla_manual_client.launch" />
+
+  <!-- pcl map capturing -->
+  <include file="$(find pcl_recorder)/launch/pcl_recorder.launch" />
+
+  <!-- common -->
+  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_common.launch" />
+
+</launch>
+
