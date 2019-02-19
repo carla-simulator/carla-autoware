@@ -22,6 +22,7 @@ Use ARROWS or WASD keys for control.
     P            : toggle autopilot
     M            : toggle manual transmission
     ,/.          : gear up/down
+    B            : toggle forwarding of actuator command (if disabled, manually controlling the client is possible)
 
     TAB          : change sensor position
     `            : next sensor
@@ -52,6 +53,10 @@ import weakref
 from collections import deque
 import random
 
+import rospy
+from std_msgs.msg import Bool
+import carla_autoware_sensors
+
 try:
     import pygame
     from pygame.locals import KMOD_CTRL
@@ -81,6 +86,7 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_w
+    from pygame.locals import K_b
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -143,10 +149,13 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = actor_filter
         self._actor_spawnpoint = actor_spawnpoint
+        self._actuator_data_forwarding_active = False
+        self.actuator_data_forward_pub = None
         self.restart()
         self.world.on_tick(hud.on_world_tick)
 
     def restart(self):
+        self.toggle_actuator_data_forwarding()
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager._index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager._transform_index if self.camera_manager is not None else 0
@@ -182,9 +191,9 @@ class World(object):
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
-        self.gnss_sensor = GnssSensor(self.player)
-        self.lidar_sensor = LidarSensor(self.player)
-        self.front_camera = FrontCamera(self.player)
+        self.gnss_sensor = carla_autoware_sensors.GnssSensor(self.player)
+        self.lidar_sensor = carla_autoware_sensors.LidarSensor(self.player)
+        self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
         self.camera_manager = CameraManager(self.player, self.hud)
         self.camera_manager._transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
@@ -197,6 +206,15 @@ class World(object):
         preset = self._weather_presets[self._weather_index]
         self.hud.notification('Weather: %s' % preset[1])
         self.player.get_world().set_weather(preset[0])
+
+    def toggle_actuator_data_forwarding(self):
+        if not self.actuator_data_forward_pub:
+            self.actuator_data_forward_pub = rospy.Publisher("/actuator_data_forwarding_active", Bool, queue_size=1)
+        self._actuator_data_forwarding_active = not self._actuator_data_forwarding_active
+        msg = Bool()
+        msg.data = self._actuator_data_forwarding_active
+        self.hud.notification('Set actuator data forwarding to: {}'.format(self._actuator_data_forwarding_active))
+        self.actuator_data_forward_pub.publish(msg)
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -211,13 +229,9 @@ class World(object):
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
             self.gnss_sensor.sensor,
+            self.front_camera.sensor,
+            self.lidar_sensor.sensor,
             self.player]
-
-        if self.front_camera is not None:
-            actors.append(self.front_camera.sensor)
-        if self.lidar_sensor is not None:
-            actors.append(self.lidar_sensor.sensor)
-
         for actor in actors:
             if actor is not None:
                 actor.destroy()
@@ -232,6 +246,7 @@ class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
         self._autopilot_enabled = start_in_autopilot
         self._control = carla.VehicleControl()
+        world.player.set_autopilot(self._autopilot_enabled)
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
@@ -254,6 +269,8 @@ class KeyboardControl(object):
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
+                elif event.key == K_b:
+                    world.toggle_actuator_data_forwarding()
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
@@ -576,76 +593,6 @@ class LaneInvasionSensor(object):
         text = ['%r' % str(x).split()[-1] for x in set(event.crossed_lane_markings)]
         self._hud.notification('Crossed line %s' % ' and '.join(text))
 
-
-# ==============================================================================
-# -- GnssSensor ----------------------------------------------------------------
-# ==============================================================================
-
- 
-class GnssSensor(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        self.lat = 0.0
-        self.lon = 0.0
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.gnss')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=1.0, z=2.8)), attach_to=self._parent)
-        # We need to pass the lambda a weak reference to self to avoid circular
-        # reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: GnssSensor._on_gnss_event(weak_self, event))
- 
-    @staticmethod
-    def _on_gnss_event(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        self.lat = event.latitude
-        self.lon = event.longitude
-
-
-# ==============================================================================
-# -- LidarSensor ---------------------------------------------------------------
-# ==============================================================================
-# Lidar sensor for handling in AD stack
-
-class LidarSensor(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        bp.set_attribute('range', '5000')
-        bp.set_attribute('role_name', 'sensor')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.0)), attach_to=self._parent)
-
-# ==============================================================================
-# -- FrontCameraSensor ---------------------------------------------------------
-# ==============================================================================
-# Camera as Sensor for handling in AD stack
-
-class FrontCamera(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.camera.rgb')
-        bp.set_attribute('role_name', 'front')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0, z=2.0)), attach_to=self._parent)
-        # We need to pass the lambda a weak reference to self to avoid
-        # circular reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda image: FrontCamera._on_image(weak_self, image))
-
-    @staticmethod
-    def _on_image(weak_self, image):
-        self = weak_self()
-        if not self:
-            return
-        # AD stack: add image handling here
-
-
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------
 # ==============================================================================
@@ -749,29 +696,50 @@ class CameraManager(object):
 
 
 
+
 # ==============================================================================
-# -- game_loop() ---------------------------------------------------------------
+# -- main() --------------------------------------------------------------------
 # ==============================================================================
 
-def game_loop(args):
+def main():
+    rospy.init_node('carla_client')
+
+    host = rospy.get_param('/carla/host', '127.0.0.1')
+    port = rospy.get_param('/carla/port', '2000')
+    vehicle_filter = rospy.get_param('/carla/client/vehicle_filter', 'vehicle.*')
+    spawn_point = rospy.get_param('/carla/client/spawn_point',{})
+    resolution = rospy.get_param('/carla/client/resolution',{})
+    start_in_autopilot = rospy.get_param('/carla/client/start_in_autopilot', False)
+
+    rospy.loginfo('listening to server %s:%s', host, port)
+    rospy.loginfo('using vehicle filter: %s', vehicle_filter)
+    if start_in_autopilot:
+        rospy.loginfo('Starting with autopilot enabled.')
+    
+    if spawn_point:
+        rospy.loginfo('spawning at %s', spawn_point)
+    else:
+        rospy.loginfo('spawning at random point')
+    
     pygame.init()
     pygame.font.init()
     world = None
 
     try:
-        client = carla.Client(args.host, args.port)
+        client = carla.Client(host, port)
         client.set_timeout(2.0)
 
         display = pygame.display.set_mode(
-            (args.width, args.height),
+            (resolution['width'], resolution['height']),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-        hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args.filter, args.spawnpoint)
-        controller = KeyboardControl(world, args.autopilot)        
-        
+        hud = HUD(resolution['width'], resolution['height'])
+        world = World(client.get_world(), hud, vehicle_filter, spawn_point)
+        controller = KeyboardControl(world, start_in_autopilot)
+
         clock = pygame.time.Clock()
-        while True:
+
+        while not rospy.core.is_shutdown():
             clock.tick_busy_loop(60)
             if controller.parse_events(world, clock):
                 return
@@ -780,75 +748,9 @@ def game_loop(args):
             pygame.display.flip()
 
     finally:
-
         if world is not None:
             world.destroy()
-
         pygame.quit()
-
-
-# ==============================================================================
-# -- main() --------------------------------------------------------------------
-# ==============================================================================
-
-
-def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Autoware Control Client')
-    argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
-        help='print debug information')
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-a', '--autopilot',
-        action='store_true',
-        help='enable autopilot')
-    argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
-        help='window resolution (default: 1280x720)')
-    argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--spawnpoint',
-        nargs=4,
-        metavar='FLOAT',
-        type=float,
-        help='spawn point (X Y Z YAW, default: random predefined spawnpoints)')
-    args = argparser.parse_args()
-
-    args.width, args.height = [int(x) for x in args.res.split('x')]
-
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
-
-    logging.info('listening to server %s:%s', args.host, args.port)
-
-    print(__doc__)
-
-    try:
-
-        game_loop(args)
-
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
-
 
 if __name__ == '__main__':
 

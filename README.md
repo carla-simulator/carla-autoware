@@ -70,7 +70,10 @@ You need two terminals:
     #execute carla-autoware-bridge and carla-autoware-bridge
     export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
     source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
+    #either execute a headless Carla client
     roslaunch carla_autoware_bridge carla_autoware_bridge.launch
+    #or
+    roslaunch carla_autoware_bridge carla_autoware_bridge_with_manual_control.launch
 
 In Autoware Runtime Manager, select the customized launch files:
 
@@ -86,44 +89,3 @@ Now you can start the Autoware Stack by starting all launch files from top to bo
 A special camera is positioned behind the car to see the car and its environment.
 You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
 
-### Run with controllable Carla client
-
-It is also possible to run a Carla client, that can additionally be controlled by keyboard.
-
-The execution order:
-
-1. Carla Server
-2. Carla Client
-3. Autoware Runtime Manager
-4. Carla Autoware Bridge
-5. Autoware Stack
-
-You need three terminals:
-
-    #Terminal 1
-
-    #execute Carla
-    SDL_VIDEODRIVER=offscreen <path-to-carla>/CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -fps=10
-
-
-    #Terminal 2
-
-    cd ~/carla-autoware
-
-    #execute Carla ego vehicle client
-    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg
-    ./catkin_ws/src/carla_client/src/carla_autoware_manual_control.py --filter vehicle.toyota.prius*
-
-
-    #Terminal 3
-
-    export CARLA_AUTOWARE_ROOT=~/carla-autoware
-    
-    #execute Autoware (forks into background)
-    <path-to-autoware>/ros/run
-
-    #execute carla-autoware-bridge and carla-autoware-bridge
-    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
-    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
-    roslaunch carla_autoware_bridge carla_autoware_bridge.launch
-    

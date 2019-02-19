@@ -1,7 +1,5 @@
 <launch>
 
-  <include file="$(find carla_ros_bridge)/client.launch" />
-
   <!-- pcl recorder -->
   <node pkg="pcl_recorder" type="pcl_recorder_node" name="pcl_recorder_node" output="screen"/>
 

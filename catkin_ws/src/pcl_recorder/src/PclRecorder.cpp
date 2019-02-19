@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019 Intel Labs.
  *
- * authors: Frederik Pasch (frederik.pasch@intel.com)
+ * authors: Frederik Pasch
  */
 
 #include "PclRecorder.h"
@@ -28,6 +28,11 @@ void PclRecorder::callback(const pcl::PCLPointCloud2::ConstPtr& cloud)
     return;
   }
 
+  if (!tf_buffer_.canTransform(fixed_frame_, cloud->header.frame_id, pcl_conversions::fromPCL(cloud->header.stamp))) {
+   //ROS_WARN("Could not get transform!");
+   return;
+  }
+
   std::stringstream ss;
   ss << "/tmp/pcl_capture/capture" << cloud->header.stamp << ".pcd";
 
@@ -35,18 +40,8 @@ void PclRecorder::callback(const pcl::PCLPointCloud2::ConstPtr& cloud)
            (int)cloud->width * cloud->height,
            ss.str().c_str());
 
-  Eigen::Vector4f v = Eigen::Vector4f::Zero ();
-  Eigen::Quaternionf q = Eigen::Quaternionf::Identity ();
   Eigen::Affine3d transform;
-  if (!tf_buffer_.canTransform(fixed_frame_, cloud->header.frame_id, pcl_conversions::fromPCL(cloud->header.stamp), ros::Duration (3.0))) {
-   ROS_WARN("Could not get transform!");
-   return;
-  }
-
   transform = tf2::transformToEigen (tf_buffer_.lookupTransform(fixed_frame_, cloud->header.frame_id,  pcl_conversions::fromPCL (cloud->header.stamp)));
-  v = Eigen::Vector4f::Zero ();
-  v.head<3> () = transform.translation ().cast<float> ();
-  q = transform.rotation ().cast<float> ();
 
   pcl::PointCloud<pcl::PointXYZ> pclCloud;
   pcl::fromPCLPointCloud2(*cloud, pclCloud);

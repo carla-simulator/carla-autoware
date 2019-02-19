@@ -1,0 +1,25 @@
+<launch>
+  <arg name="wheelbase" default="2.5" /> <!-- distance between front and back axle in meters -->
+
+  <!-- ros bridge -->
+  <include file="$(find carla_ros_bridge)/client.launch" />
+
+  <!-- remap carla lidar to autoware -->
+  <node pkg="topic_tools" type="relay" name="points_relay" args="/carla/ego_vehicle/lidar/sensor/point_cloud /points_raw"/>
+
+  <!-- remap carla front camera to autoware -->
+  <node pkg="topic_tools" type="relay" name="imag_relay" args="/carla/ego_vehicle/camera/rgb/front/image_color /image_raw"/>
+
+  <!-- extract pose from carla odometry -->
+  <node pkg="carla_autoware_bridge" type="odometry_to_posestamped" name="odometry_to_posestamped"/>
+
+  <!-- convert twist to carla ackermann drive-->
+  <node pkg="carla_autoware_bridge" type="vehiclecmd_to_ackermanndrive" name="vehiclecmd_to_ackermanndrive" output="screen">
+    <param name="wheelbase" value="$(arg wheelbase)"/>
+  </node>
+
+  <!-- mission planning -->
+  <include file="$(find carla_autoware_waypoint_publisher)/launch/carla_autoware_waypoint_publisher.launch" />
+
+</launch>
+

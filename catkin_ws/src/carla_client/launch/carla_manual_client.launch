@@ -1,0 +1,14 @@
+<launch>
+  <param name="/carla/host" value="127.0.0.1" />
+  <param name="/carla/port" value="2000" />
+  <param name="/carla/client/vehicle_filter" value="vehicle.toyota.prius*" />
+
+  <group ns="/carla/client/resolution">
+    <param name="width" value="800" />
+    <param name="height" value="600" />
+  </group>
+
+  <node pkg="carla_client" type="carla_autoware_manual_control" name="carla_autoware_manual_control" output="screen"/>
+
+</launch>
+

@@ -18,15 +18,11 @@ Execute the Carla Simulator and an Ego Vehicle.
 
     #Terminal 2
 
-    #create Carla ego vehicle (BMW Isetta, to not have reflection of the roof)
-    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg
-    ./carla_autoware_control.py --filter vehicle.bmw.isetta
-
-    #Terminal 3
-
-    source ~/carla-autoware/catkin_ws/devel/setup
-    #Execute the following to capture single point clouds within the /tmp/pcl_capture directory
-    roslaunch pcl_recorder pcl_recorder.launch
+    #setup a Carla client and the pcl capturing.
+    #The captured point clouds are saved within /tmp/pcl_capture directory.
+    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
+    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
+    roslaunch carla_autoware_bridge carla_autoware_bridge_capture_pcl_map.launch
 
 
 When the capture drive is done, you can reduce the overall size of the point cloud.

@@ -1,11 +1,24 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2019 Intel Labs.
+#
+# authors: Frederik Pasch
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+#
+# This ROS node reads a Twist message from Autoware, converts it to an AckermannDrive message and sends it Carla
+#
+# If data is sent out can be controlled by topic /actuator_data_forwarding_active
+
 import rospy, math
 from ackermann_msgs.msg import AckermannDrive
 from autoware_msgs.msg import VehicleCmd
+from std_msgs.msg import Bool
 
 pub = rospy.Publisher("/carla/ego_vehicle/ackermann_cmd", AckermannDrive, queue_size=1)
 wheelbase = 3.0
+actuator_data_forwarding_active = True
 
 def convert_trans_rot_vel_to_steering_angle(v, omega, wheelbase):
     if omega == 0 or v == 0:
@@ -15,15 +28,24 @@ def convert_trans_rot_vel_to_steering_angle(v, omega, wheelbase):
 
 def callback(data):
     global wheelbase
+    global actuator_data_forwarding_active
+    if not actuator_data_forwarding_active:
+        return
     msg = AckermannDrive()
     msg.speed = data.twist_cmd.twist.linear.x
     msg.steering_angle = convert_trans_rot_vel_to_steering_angle(msg.speed, data.twist_cmd.twist.angular.z, wheelbase)
     pub.publish(msg)
 
+def disableCallback(data):
+    global actuator_data_forwarding_active
+    actuator_data_forwarding_active = data.data
+    rospy.loginfo("Forward actuator data set to %d", actuator_data_forwarding_active)
+
 def twist_to_ackermanndrive():
     rospy.init_node('twist_to_ackermanndrive')
     wheelbase = rospy.get_param('~wheelbase', 3.0)
     rospy.Subscriber("/vehicle_cmd", VehicleCmd, callback, queue_size=1)
+    rospy.Subscriber("/actuator_data_forwarding_active", Bool, disableCallback, queue_size=1)
     rospy.spin()
 
 if __name__ == '__main__':

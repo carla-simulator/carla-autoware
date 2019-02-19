@@ -4,7 +4,7 @@
 # Barcelona (UAB).
 # Copyright (c) 2019 Intel Labs.
 #
-# authors: Frederik Pasch (frederik.pasch@intel.com)
+# authors: Frederik Pasch
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -16,6 +16,8 @@ import sys
 import glob
 import os
 import random
+
+import carla_autoware_sensors
 
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
@@ -77,9 +79,9 @@ class World(object):
                 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
                 self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
-        self.gnss_sensor = GnssSensor(self.player)
-        self.lidar_sensor = LidarSensor(self.player)
-        self.front_camera = FrontCamera(self.player)
+        self.gnss_sensor = carla_autoware_sensors.GnssSensor(self.player)
+        self.lidar_sensor = carla_autoware_sensors.LidarSensor(self.player)
+        self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
         self.view_camera = ViewCamera(self.player)
 
     def destroy(self):
@@ -93,47 +95,6 @@ class World(object):
         for actor in actors:
             if actor is not None:
                 actor.destroy()
-
-# ==============================================================================
-# -- GnssSensor ----------------------------------------------------------------
-# ==============================================================================
-
-class GnssSensor(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        self.lat = 0.0
-        self.lon = 0.0
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.gnss')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=1.0, z=2.8)), attach_to=self._parent)
-
-# ==============================================================================
-# -- LidarSensor ---------------------------------------------------------------
-# ==============================================================================
-
-class LidarSensor(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        bp.set_attribute('range', '5000')
-        bp.set_attribute('role_name', 'sensor')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.0)), attach_to=self._parent)
-
-# ==============================================================================
-# -- FrontCameraSensor ---------------------------------------------------------
-# ==============================================================================
-
-class FrontCamera(object):
-    def __init__(self, parent_actor):
-        self.sensor = None
-        self._parent = parent_actor
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.camera.rgb')
-        bp.set_attribute('role_name', 'front')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0, z=2.0)), attach_to=self._parent)
 
 # ==============================================================================
 # -- CameraSensor for Visualization --------------------------------------------
@@ -182,8 +143,6 @@ def main():
     finally:
 
         if world is not None:
-            rospy.loginfo('DELETING WORLD')
-
             world.destroy()
 
 
