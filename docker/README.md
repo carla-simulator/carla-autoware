@@ -10,6 +10,9 @@ Build a Docker image which integrates the Carla Autoware Bridge into the Autowar
 ### Build image
 Clone the Carla Autoware Bridge GIT repository and initialize the GIT submodules.
 
+   #ensure that the GIT repo is clean
+   git clean -fdx
+
    cd docker
    ./build.sh <optional "docker build ..." parameters, e.g. setting build-args like proxies>
 
