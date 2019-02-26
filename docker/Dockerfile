@@ -38,7 +38,6 @@ RUN /bin/bash -c 'source /home/$USERNAME/Autoware/ros/devel/setup.bash; cd /home
 
 COPY --chown=autoware autoware_data /home/$USERNAME/carla-autoware/autoware_data
 COPY --chown=autoware autoware_launch /home/$USERNAME/carla-autoware/autoware_launch
-COPY --chown=autoware carla_autoware_control.py /home/$USERNAME/carla-autoware/
 COPY --chown=autoware docker/param.yaml /home/$USERNAME/Autoware/ros/src/util/packages/runtime_manager/scripts/param.yaml
 
 ENV CARLA_AUTOWARE_ROOT=/home/$USERNAME/carla-autoware
