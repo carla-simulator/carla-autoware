@@ -28,11 +28,6 @@ void PclRecorder::callback(const pcl::PCLPointCloud2::ConstPtr& cloud)
     return;
   }
 
-  if (!tf_buffer_.canTransform(fixed_frame_, cloud->header.frame_id, pcl_conversions::fromPCL(cloud->header.stamp))) {
-   //ROS_WARN("Could not get transform!");
-   return;
-  }
-
   std::stringstream ss;
   ss << "/tmp/pcl_capture/capture" << cloud->header.stamp << ".pcd";
 
@@ -41,14 +36,20 @@ void PclRecorder::callback(const pcl::PCLPointCloud2::ConstPtr& cloud)
            ss.str().c_str());
 
   Eigen::Affine3d transform;
-  transform = tf2::transformToEigen (tf_buffer_.lookupTransform(fixed_frame_, cloud->header.frame_id,  pcl_conversions::fromPCL (cloud->header.stamp)));
+  try {
+    transform = tf2::transformToEigen (tf_buffer_.lookupTransform(fixed_frame_, cloud->header.frame_id,  pcl_conversions::fromPCL (cloud->header.stamp), ros::Duration(1)));
 
-  pcl::PointCloud<pcl::PointXYZ> pclCloud;
-  pcl::fromPCLPointCloud2(*cloud, pclCloud);
+    pcl::PointCloud<pcl::PointXYZ> pclCloud;
+    pcl::fromPCLPointCloud2(*cloud, pclCloud);
 
-  pcl::PointCloud<pcl::PointXYZ> transformedCloud;
-  pcl::transformPointCloud (pclCloud, transformedCloud, transform);
+    pcl::PointCloud<pcl::PointXYZ> transformedCloud;
+    pcl::transformPointCloud (pclCloud, transformedCloud, transform);
 
-  pcl::PCDWriter writer;
-  writer.writeBinary(ss.str(), transformedCloud);
+    pcl::PCDWriter writer;
+    writer.writeBinary(ss.str(), transformedCloud);
+  }
+  catch (tf2::TransformException &ex)
+  {
+    ROS_WARN("Could NOT transform: %s", ex.what());
+  }
 }
