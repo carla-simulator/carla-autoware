@@ -52,11 +52,11 @@ class LidarSensor(object):
         # using velodyne HDL-64E parameters
         bp.set_attribute('range', '5000')
         bp.set_attribute('channels', '64')
-        bp.set_attribute('points_per_second', '250000')
+        bp.set_attribute('points_per_second', '100000')
         bp.set_attribute('upper_fov', '2.0')
         bp.set_attribute('lower_fov', '-26.8')
         bp.set_attribute('rotation_frequency', '10')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=-0.4, z=2.4)), attach_to=self._parent)
+        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.4)), attach_to=self._parent)
 
 # ==============================================================================
 # -- FrontCameraSensor ---------------------------------------------------------
