@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2019 Intel Labs.
+ * Copyright (c) 2019 Intel Corporation
  *
- * authors: Frederik Pasch
+ * This work is licensed under the terms of the MIT license.
+ * For a copy, see <https://opensource.org/licenses/MIT>.
  */
-
 #include "PclRecorder.h"
 #include <string>
 #include <pcl/io/pcd_io.h>
