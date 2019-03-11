@@ -89,3 +89,11 @@ Now you can start the Autoware Stack by starting all launch files from top to bo
 A special camera is positioned behind the car to see the car and its environment.
 You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
 
+# Design
+
+The bridge contains two Carla Clients.
+
+1. ROS Bridge - Monitors existing actors in Carla, publishes changes on ROS Topics
+2. Ego Vehicle Client - Instantiation of the ego vehicle. Further communication to Carla is only done for visualization purposes.
+
+![Design Overview](docs/images/design.png)
