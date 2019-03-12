@@ -1,4 +1,6 @@
 <launch>
+  <arg name='host' default='localhost'/>
+  <arg name='port' default='2000'/>
 
   <param name="/carla/client/start_in_autopilot" value="False" />
 
@@ -7,6 +9,10 @@
 
   <!-- common -->
   <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_common.launch" />
+
+  <!-- override parameters -->
+  <param name="carla/host" value="$(arg host)" />
+  <param name="carla/port" value="$(arg port)" />
 
 </launch>
 

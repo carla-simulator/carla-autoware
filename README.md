@@ -89,6 +89,15 @@ Now you can start the Autoware Stack by starting all launch files from top to bo
 A special camera is positioned behind the car to see the car and its environment.
 You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
 
+### Multi machine setup
+
+You can run Autoware and Carla on different machines. 
+To let the carla autoware bridge connect to a remote Carla Server, execute roslaunch with the following parameters
+
+    roslaunch host:=<hostname> port:=<port number> carla_autoware_bridge carla_autoware_bridge.launch
+
+
+
 # Design
 
 The bridge contains two Carla Clients.
