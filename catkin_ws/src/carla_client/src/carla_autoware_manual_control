@@ -171,7 +171,7 @@ class World(object):
         cam_pos_index = self.camera_manager._transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
         blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        blueprint.set_attribute('role_name', 'hero')
+        blueprint.set_attribute('role_name', 'ego_vehicle')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)

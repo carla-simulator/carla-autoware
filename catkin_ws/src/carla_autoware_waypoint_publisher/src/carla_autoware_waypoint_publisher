@@ -44,7 +44,7 @@ class CarlaToAutowareWaypointConverter(object):
         if self._update_lock.acquire():
             hero = None
             for actor in self._world.get_actors():
-                if (actor.attributes.get('role_name') == "hero"):
+                if (actor.attributes.get('role_name') == "ego_vehicle"):
                     hero = actor
             
             if self._vehicle is None and hero is not None:

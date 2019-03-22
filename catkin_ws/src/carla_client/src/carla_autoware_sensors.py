@@ -47,10 +47,9 @@ class LidarSensor(object):
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
         bp.set_attribute('role_name', 'sensor')
-        # using velodyne HDL-64E parameters
         bp.set_attribute('range', '5000')
-        bp.set_attribute('channels', '64')
-        bp.set_attribute('points_per_second', '100000')
+        bp.set_attribute('channels', '32')
+        bp.set_attribute('points_per_second', '320000')
         bp.set_attribute('upper_fov', '2.0')
         bp.set_attribute('lower_fov', '-26.8')
         bp.set_attribute('rotation_frequency', '10')
