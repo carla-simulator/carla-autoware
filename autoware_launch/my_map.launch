@@ -1,12 +1,18 @@
+<!-- -->
 <launch>
 
-<!-- TF -->
-<include file="$(env CARLA_AUTOWARE_ROOT)/autoware_launch/tf.launch"/>
+  <!-- TF -->
+  <include file="$(env CARLA_AUTOWARE_ROOT)/autoware_launch/tf.launch"/>
 
-<!-- Point Cloud -->
-<node pkg="map_file" type="points_map_loader" name="points_map_loader" args="noupdate $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/map.pcd"/>
+  <!-- 
+    # Points map loader #
+    Out: /points_map
+   -->
+  <node pkg="map_file" type="points_map_loader" name="points_map_loader" args="noupdate $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/map.pcd"/>
 
-<!-- Vector Map -->
-<node pkg="map_file" type="vector_map_loader" name="vector_map_loader" args="$(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/point.csv $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/dtlane.csv $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/vector_map/lane.csv"/>
+  <!--
+    # Vector Map loader #
+    @todo: currently not provided as there is not conversion from OpenDrive to Autoware map format yet.
+  -->
 
 </launch>
