@@ -52,7 +52,7 @@ class LidarSensor(object):
         bp.set_attribute('points_per_second', '320000')
         bp.set_attribute('upper_fov', '2.0')
         bp.set_attribute('lower_fov', '-26.8')
-        bp.set_attribute('rotation_frequency', '10')
+        bp.set_attribute('rotation_frequency', '20')
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.4)), attach_to=self._parent)
 
 # ==============================================================================

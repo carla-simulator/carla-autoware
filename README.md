@@ -4,7 +4,7 @@ Integration of AutoWare AV software with the CARLA simulator
 ## Requirements
 
 - ROS kinetic
-- Autoware (tested with 1.10.0)
+- Autoware (tested with 1.11.0)
 - PointCloud Map (see [Map Creation](docs/map_creation.md))
 
 
@@ -57,7 +57,7 @@ You need two terminals:
     #Terminal 1
 
     #execute Carla
-    SDL_VIDEODRIVER=offscreen <path-to-carla>/CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -fps=10
+    SDL_VIDEODRIVER=offscreen <path-to-carla>/CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -fps=20
 
 
     #Terminal 2

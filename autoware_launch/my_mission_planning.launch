@@ -1,22 +1,32 @@
+<!-- -->
 <launch>
   <!-- the mission is published by the carla_autoware_waypoint_publisher -->
 
-  <!-- setting path parameter -->
-  <arg name="topic_pose_stamped" default="/ndt_pose" />
-  <arg name="topic_twist_stamped" default="/estimate_twist" />
-
-  <!-- vel_pose_mux -->
+  <!-- 
+    # vel_pose_connect #
+    the vehicle status is read and a can_velocity (geometry_msgs::TwistStamped) is calculated (by can_status_translator)
+    In:  /vehicle_status
+    In:  /can_info            (@todo not published yet)
+    Out: /linear_velocity_viz (visualization of velocity)
+    out: /can_velocity
+  -->
   <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
-    <arg name="topic_pose_stamped" value="$(arg topic_pose_stamped)" />
-    <arg name="topic_twist_stamped" value="$(arg topic_twist_stamped)" />
+    <arg name="topic_pose_stamped" value="/ndt_pose" />
+    <arg name="topic_twist_stamped" value="/estimate_twist" />
   </include>
 
+  <!-- 
+    # Waypoint visualizer #
+    to visualize the waypoints in rviz
+    In:  /closest_waypoint
+    In:  /final_waypoints
+    In:  /traffic_waypoints_array (@todo empty due to missing vector map?)
+    In:  /light_color             (@todo: not published_yet)
+    In:  /light_color_managed     (@todo: not published_yet)
+    In:  /lane_waypoints_array
+  -->
   <node pkg="waypoint_maker" type="waypoint_marker_publisher" name="waypoint_marker_publisher" output="screen"/>
 
-  <!-- lane_navi -->
-  <!--
-  <node pkg="lane_planner" type="lane_navi" name="lane_navi" />
-  -->
 
   <!-- lane_rule -->
   <node pkg="lane_planner" type="lane_rule" name="lane_rule" />
