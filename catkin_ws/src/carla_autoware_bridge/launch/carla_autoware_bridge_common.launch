@@ -1,8 +1,8 @@
 <launch>
   <arg name="wheelbase" default="2.5" /> <!-- distance between front and back axle in meters -->
 
-  <!-- ros bridge -->
-  <include file="$(find carla_ros_bridge)/client.launch" />
+  <!-- ros-bridge and carla ackermann controller -->
+  <include file="$(find carla_ackermann_control)/launch/carla_ros_bridge_with_ackermann_control.launch"/>
 
   <!-- remap carla lidar to autoware -->
   <node pkg="topic_tools" type="relay" name="points_relay" args="/carla/ego_vehicle/lidar/sensor/point_cloud /points_raw"/>
