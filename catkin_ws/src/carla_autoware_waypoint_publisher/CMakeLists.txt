@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(carla_autoware_waypoint_publisher)
 
-catkin_package()
+find_package(catkin REQUIRED COMPONENTS
+        rospy
+)
 
+catkin_python_setup()
 
-install(PROGRAMS
-  src/odometry_to_posestamped
-  src/vehiclecmd_to_ackermanndrive
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+catkin_package(
+        CATKIN_DEPENDS
+        rospy
+)
+
+catkin_install_python(PROGRAMS
+    src/carla_autoware_waypoint_publisher/carla_autoware_waypoint_publisher
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY launch/
