@@ -68,3 +68,17 @@ class FrontCamera(object):
         bp.set_attribute('role_name', 'front')
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0, z=2.0)), attach_to=self._parent)
 
+# ==============================================================================
+# -- CameraSensor for Visualization --------------------------------------------
+# ==============================================================================
+
+class ViewCamera(object):
+    def __init__(self, parent_actor):
+        self.sensor = None
+        self._parent = parent_actor
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.camera.rgb')
+        bp.set_attribute('role_name', 'viewFromBehind')
+        bp.set_attribute('image_size_x', '800')
+        bp.set_attribute('image_size_y', '600')
+        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)), attach_to=self._parent)
