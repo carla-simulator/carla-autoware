@@ -23,7 +23,7 @@ Use ARROWS or WASD keys for control.
     P            : toggle autopilot
     M            : toggle manual transmission
     ,/.          : gear up/down
-    B            : toggle forwarding of actuator command (if disabled, manually controlling the client is possible)
+    B            : toggle manual control
 
     F1           : toggle HUD
     H/?          : toggle help
@@ -100,8 +100,6 @@ class World(object):
     def __init__(self, hud):
         self._surface = None
         self.hud = hud
-        self._actuator_data_forwarding_active = False
-        self.actuator_data_forward_pub = None
 
         self.image_subscriber = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color", Image, self.on_view_image)
         self.collision_subscriber = rospy.Subscriber("/carla/ego_vehicle/collision", CarlaCollisionEvent, self.on_collision)
@@ -131,15 +129,6 @@ class World(object):
         array = array[:, :, ::-1]
         self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
-    def toggle_actuator_data_forwarding(self):
-        if not self.actuator_data_forward_pub:
-            self.actuator_data_forward_pub = rospy.Publisher("/actuator_data_forwarding_active", Bool, queue_size=1)
-        self._actuator_data_forwarding_active = not self._actuator_data_forwarding_active
-        msg = Bool()
-        msg.data = self._actuator_data_forwarding_active
-        self.hud.notification('Set actuator data forwarding to: {}'.format(self._actuator_data_forwarding_active))
-        self.actuator_data_forward_pub.publish(msg)
-
     def render(self, display):
         if self._surface is not None:
             display.blit(self._surface, (0, 0))
@@ -157,6 +146,8 @@ class World(object):
 
 class KeyboardControl(object):
     def __init__(self, hud):
+        self.vehicle_control_manual_override = False
+        self.vehicle_control_manual_override_publisher = None
         self.auto_pilot_enable_publisher = rospy.Publisher("/carla/ego_vehicle/enable_autopilot", Bool, queue_size=1)
         self.vehicle_control_publisher = rospy.Publisher("/carla/ego_vehicle/vehicle_control_cmd", CarlaEgoVehicleControl, queue_size=1)
         self._autopilot_enabled = False
@@ -169,6 +160,13 @@ class KeyboardControl(object):
     def __del__(self):
         self.auto_pilot_enable_publisher.unregister()
         self.vehicle_control_publisher.unregister()
+
+    def toggle_vehicle_control_manual_override(self):
+        if not self.vehicle_control_manual_override_publisher:
+            self.vehicle_control_manual_override_publisher = rospy.Publisher("/vehicle_control_manual_override", Bool, queue_size=1)
+        self.vehicle_control_manual_override = not self.vehicle_control_manual_override
+        self.hud.notification('Set vehicle control manual override to: {}'.format(self.vehicle_control_manual_override))
+        self.vehicle_control_manual_override_publisher.publish((Bool(data=self.vehicle_control_manual_override)))
 
     def set_autopilot(self, enable):
         self.auto_pilot_enable_publisher.publish(Bool(data=enable))
@@ -184,8 +182,8 @@ class KeyboardControl(object):
                     self.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     self.hud.help.toggle()
-                #elif event.key == K_b: #reenable later
-                #    world.toggle_actuator_data_forwarding()
+                elif event.key == K_b:
+                    self.toggle_vehicle_control_manual_override()
                 if event.key == K_q:
                     self._control.gear = 1 if self._control.reverse else -1
                 elif event.key == K_m:
@@ -199,7 +197,7 @@ class KeyboardControl(object):
                     self._autopilot_enabled = not self._autopilot_enabled
                     self.set_autopilot(self._autopilot_enabled)
                     self.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
-        if not self._autopilot_enabled:
+        if not self._autopilot_enabled and self.vehicle_control_manual_override:
             self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
             self._control.reverse = self._control.gear < 0
             self.vehicle_control_publisher.publish(self._control)

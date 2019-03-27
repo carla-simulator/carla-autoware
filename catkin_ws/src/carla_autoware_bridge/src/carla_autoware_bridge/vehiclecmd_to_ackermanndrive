@@ -7,7 +7,7 @@
 #
 # This ROS node reads a Twist message from Autoware, converts it to an AckermannDrive message and sends it Carla
 #
-# If data is sent out can be controlled by topic /actuator_data_forwarding_active
+# If data is sent out can be controlled by topic /vehicle_control_manual_override
 
 import rospy, math
 from ackermann_msgs.msg import AckermannDrive
@@ -16,7 +16,7 @@ from std_msgs.msg import Bool
 
 pub = rospy.Publisher("/carla/ego_vehicle/ackermann_cmd", AckermannDrive, queue_size=1)
 wheelbase = 3.0
-actuator_data_forwarding_active = True
+vehicle_control_manual_override = False
 
 def convert_trans_rot_vel_to_steering_angle(v, omega, wheelbase):
     if omega == 0 or v == 0:
@@ -26,24 +26,24 @@ def convert_trans_rot_vel_to_steering_angle(v, omega, wheelbase):
 
 def callback(data):
     global wheelbase
-    global actuator_data_forwarding_active
-    if not actuator_data_forwarding_active:
+    global vehicle_control_manual_override
+    if vehicle_control_manual_override:
         return
     msg = AckermannDrive()
     msg.speed = data.twist_cmd.twist.linear.x
     msg.steering_angle = convert_trans_rot_vel_to_steering_angle(msg.speed, data.twist_cmd.twist.angular.z, wheelbase)
     pub.publish(msg)
 
-def disableCallback(data):
-    global actuator_data_forwarding_active
-    actuator_data_forwarding_active = data.data
-    rospy.loginfo("Forward actuator data set to %d", actuator_data_forwarding_active)
+def manual_override_callback(data):
+    global vehicle_control_manual_override
+    vehicle_control_manual_override = data.data
+    rospy.loginfo("Vehicle control manual override set to %d", vehicle_control_manual_override)
 
 def twist_to_ackermanndrive():
     rospy.init_node('twist_to_ackermanndrive')
     wheelbase = rospy.get_param('~wheelbase', 3.0)
     rospy.Subscriber("/vehicle_cmd", VehicleCmd, callback, queue_size=1)
-    rospy.Subscriber("/actuator_data_forwarding_active", Bool, disableCallback, queue_size=1)
+    rospy.Subscriber("/vehicle_control_manual_override", Bool, manual_override_callback, queue_size=1)
     rospy.spin()
 
 if __name__ == '__main__':
