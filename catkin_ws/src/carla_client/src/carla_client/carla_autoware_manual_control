@@ -35,21 +35,14 @@ from __future__ import print_function
 import argparse
 import collections
 import datetime
-import glob
-import logging
 import math
 import os
-import random
 import re
 import sys
-import weakref
-from collections import deque
-import random
 
 import rospy
 import tf
 from std_msgs.msg import Bool
-import carla_autoware_sensors
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Image
 from carla_ros_bridge.msg import CarlaCollisionEvent

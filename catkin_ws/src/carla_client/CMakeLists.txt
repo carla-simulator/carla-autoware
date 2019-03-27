@@ -15,9 +15,8 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
-  src/carla_client/carla_autoware_control
+  src/carla_client/carla_autoware_client
   src/carla_client/carla_autoware_manual_control
-  src/carla_client/carla_autoware_sensors.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
