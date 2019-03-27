@@ -25,11 +25,6 @@ Use ARROWS or WASD keys for control.
     ,/.          : gear up/down
     B            : toggle forwarding of actuator command (if disabled, manually controlling the client is possible)
 
-    TAB          : change sensor position
-    `            : next sensor
-    [1-9]        : change to sensor [1-9]
-    Backspace    : change vehicle
-
     F1           : toggle HUD
     H/?          : toggle help
     ESC          : quit
@@ -67,10 +62,6 @@ try:
     import pygame
     from pygame.locals import KMOD_CTRL
     from pygame.locals import KMOD_SHIFT
-    from pygame.locals import K_0
-    from pygame.locals import K_9
-    from pygame.locals import K_BACKQUOTE
-    from pygame.locals import K_BACKSPACE
     from pygame.locals import K_COMMA
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
@@ -80,7 +71,6 @@ try:
     from pygame.locals import K_RIGHT
     from pygame.locals import K_SLASH
     from pygame.locals import K_SPACE
-    from pygame.locals import K_TAB
     from pygame.locals import K_UP
     from pygame.locals import K_a
     from pygame.locals import K_c
@@ -103,41 +93,15 @@ except ImportError:
         'cannot import numpy, make sure numpy package is installed')
 
 # ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-try:
-    sys.path.append(glob.glob('**/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-import carla
-from carla import ColorConverter as cc
-
-# ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
 
 class World(object):
-    def __init__(self, carla_world, hud, actor_filter, actor_spawnpoint):
-        self.world = carla_world
+    def __init__(self, hud):
         self._surface = None
-        self.map = self.world.get_map()
         self.hud = hud
-        self.player = None
-        self.collision_sensor = None
-        self.lane_invasion_sensor = None
-        self.gnss_sensor = None
-        self.camera_manager = None
-        self.lidar_sensor = None
-        self.front_camera = None
-        self._actor_filter = actor_filter
-        self._actor_spawnpoint = actor_spawnpoint
         self._actuator_data_forwarding_active = False
         self.actuator_data_forward_pub = None
-        self.restart()
 
         self.image_subscriber = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color", Image, self.on_view_image)
         self.collision_subscriber = rospy.Subscriber("/carla/ego_vehicle/collision", CarlaCollisionEvent, self.on_collision)
@@ -160,49 +124,6 @@ class World(object):
                 text.append("Unknown ")
         self.hud.notification('Crossed line %s' % ' and '.join(text))
 
-
-    def restart(self):
-        self.toggle_actuator_data_forwarding()
-        # Keep same camera config if the camera manager exists.
-        cam_index = self.camera_manager._index if self.camera_manager is not None else 0
-        cam_pos_index = self.camera_manager._transform_index if self.camera_manager is not None else 0
-        # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        blueprint.set_attribute('role_name', 'ego_vehicle')
-        if blueprint.has_attribute('color'):
-            color = random.choice(blueprint.get_attribute('color').recommended_values)
-            blueprint.set_attribute('color', color)
-        # Spawn the player.
-        if self._actor_spawnpoint:
-            spawn_point = carla.Transform()
-            spawn_point.location.x = self._actor_spawnpoint[0]
-            spawn_point.location.y = self._actor_spawnpoint[1]
-            spawn_point.location.z = self._actor_spawnpoint[2]
-            spawn_point.rotation.yaw = self._actor_spawnpoint[3]
-            if self.player is not None:
-                self.destroy()
-            while self.player is None:
-                self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-        else:
-            if self.player is not None:
-                spawn_point = self.player.get_transform()
-                spawn_point.location.z += 2.0
-                spawn_point.rotation.roll = 0.0
-                spawn_point.rotation.pitch = 0.0
-                self.destroy()
-                self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-            while self.player is None:
-                spawn_points = self.world.get_map().get_spawn_points()
-                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-                self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-        # Set up the sensors.
-        self.collision_sensor = carla_autoware_sensors.CollisionSensor(self.player)
-        self.lane_invasion_sensor = carla_autoware_sensors.LaneInvasionSensor(self.player)
-        self.gnss_sensor = carla_autoware_sensors.GnssSensor(self.player)
-        self.lidar_sensor = carla_autoware_sensors.LidarSensor(self.player)
-        self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
-        self.view_camera = carla_autoware_sensors.ViewCamera(self.player)
-
     def on_view_image(self, image):
         array = np.frombuffer(image.data, dtype=np.dtype("uint8"))
         array = np.reshape(array, (image.height, image.width, 4))
@@ -219,9 +140,6 @@ class World(object):
         self.hud.notification('Set actuator data forwarding to: {}'.format(self._actuator_data_forwarding_active))
         self.actuator_data_forward_pub.publish(msg)
 
-    def tick(self, clock):
-        self.hud.tick(self, clock)
-
     def render(self, display):
         if self._surface is not None:
             display.blit(self._surface, (0, 0))
@@ -231,23 +149,22 @@ class World(object):
         self.image_subscriber.unregister()
         self.collision_subscriber.unregister()
         self.lane_invasion_subscriber.unregister()
-        self.player.destroy()
 
 
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
 # ==============================================================================
 
-
 class KeyboardControl(object):
-    def __init__(self, world, start_in_autopilot):
+    def __init__(self, hud):
         self.auto_pilot_enable_publisher = rospy.Publisher("/carla/ego_vehicle/enable_autopilot", Bool, queue_size=1)
         self.vehicle_control_publisher = rospy.Publisher("/carla/ego_vehicle/vehicle_control_cmd", CarlaEgoVehicleControl, queue_size=1)
-        self._autopilot_enabled = start_in_autopilot
+        self._autopilot_enabled = False
         self._control = CarlaEgoVehicleControl()
         self.set_autopilot(self._autopilot_enabled)
         self._steer_cache = 0.0
-        world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
+        self.hud = hud
+        self.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def __del__(self):
         self.auto_pilot_enable_publisher.unregister()
@@ -256,35 +173,32 @@ class KeyboardControl(object):
     def set_autopilot(self, enable):
         self.auto_pilot_enable_publisher.publish(Bool(data=enable))
 
-    def parse_events(self, world, clock):
+    def parse_events(self, clock):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
             elif event.type == pygame.KEYUP:
                 if self._is_quit_shortcut(event.key):
                     return True
-                elif event.key == K_BACKSPACE:
-                    world.restart()
                 elif event.key == K_F1:
-                    world.hud.toggle_info()
+                    self.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
-                    world.hud.help.toggle()
-                elif event.key == K_b:
-                    world.toggle_actuator_data_forwarding()
-                if isinstance(self._control, CarlaEgoVehicleControl):
-                    if event.key == K_q:
-                        self._control.gear = 1 if self._control.reverse else -1
-                    elif event.key == K_m:
-                        self._control.manual_gear_shift = not self._control.manual_gear_shift
-                        world.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
-                    elif self._control.manual_gear_shift and event.key == K_COMMA:
-                        self._control.gear = max(-1, self._control.gear - 1)
-                    elif self._control.manual_gear_shift and event.key == K_PERIOD:
-                        self._control.gear = self._control.gear + 1
-                    elif event.key == K_p:
-                        self._autopilot_enabled = not self._autopilot_enabled
-                        self.set_autopilot(self._autopilot_enabled)
-                        world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                    self.hud.help.toggle()
+                #elif event.key == K_b: #reenable later
+                #    world.toggle_actuator_data_forwarding()
+                if event.key == K_q:
+                    self._control.gear = 1 if self._control.reverse else -1
+                elif event.key == K_m:
+                    self._control.manual_gear_shift = not self._control.manual_gear_shift
+                    self.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
+                elif self._control.manual_gear_shift and event.key == K_COMMA:
+                    self._control.gear = max(-1, self._control.gear - 1)
+                elif self._control.manual_gear_shift and event.key == K_PERIOD:
+                    self._control.gear = self._control.gear + 1
+                elif event.key == K_p:
+                    self._autopilot_enabled = not self._autopilot_enabled
+                    self.set_autopilot(self._autopilot_enabled)
+                    self.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
             self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
             self._control.reverse = self._control.gear < 0
@@ -341,8 +255,8 @@ class HUD(object):
         self.vehicle_status_subscribe.unregister()
         self.vehicle_info_subscriber.unregister()
 
-    def tick(self, world, clock):
-        self._notifications.tick(world, clock)
+    def tick(self, clock):
+        self._notifications.tick(clock)
 
     def vehicle_status_updated(self, vehicle_status):
         self.vehicle_status = vehicle_status
@@ -442,11 +356,9 @@ class HUD(object):
         self._notifications.render(display)
         self.help.render(display)
 
-
 # ==============================================================================
 # -- FadingText ----------------------------------------------------------------
 # ==============================================================================
-
 
 class FadingText(object):
     def __init__(self, font, dim, pos):
@@ -463,7 +375,7 @@ class FadingText(object):
         self.surface.fill((0, 0, 0, 0))
         self.surface.blit(text_texture, (10, 11))
 
-    def tick(self, _, clock):
+    def tick(self, clock):
         delta_seconds = 1e-3 * clock.get_time()
         self.seconds_left = max(0.0, self.seconds_left - delta_seconds)
         self.surface.set_alpha(500.0 * self.seconds_left)
@@ -471,11 +383,9 @@ class FadingText(object):
     def render(self, display):
         display.blit(self.surface, self.pos)
 
-
 # ==============================================================================
 # -- HelpText ------------------------------------------------------------------
 # ==============================================================================
-
 
 class HelpText(object):
     def __init__(self, font, width, height):
@@ -506,49 +416,29 @@ class HelpText(object):
 def main():
     rospy.init_node('carla_client')
 
-    host = rospy.get_param('/carla/host', '127.0.0.1')
-    port = rospy.get_param('/carla/port', '2000')
-    vehicle_filter = rospy.get_param('/carla/client/vehicle_filter', 'vehicle.*')
-    spawn_point = rospy.get_param('/carla/client/spawn_point',{})
-
     #resolution should be similar to carla_autoware_sensors.ViewCamera
     resolution = {"width": 800, "height": 600}
-
-    start_in_autopilot = rospy.get_param('/carla/client/start_in_autopilot', False)
-
-    rospy.loginfo('listening to server %s:%s', host, port)
-    rospy.loginfo('using vehicle filter: %s', vehicle_filter)
-    if start_in_autopilot:
-        rospy.loginfo('Starting with autopilot enabled.')
-    
-    if spawn_point:
-        rospy.loginfo('spawning at %s', spawn_point)
-    else:
-        rospy.loginfo('spawning at random point')
     
     pygame.init()
     pygame.font.init()
     world = None
-
+    #todo reenable start in autopilot. should be done as rostopic pub
     try:
-        client = carla.Client(host, port)
-        client.set_timeout(2.0)
-
         display = pygame.display.set_mode(
             (resolution['width'], resolution['height']),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(resolution['width'], resolution['height'])
-        world = World(client.get_world(), hud, vehicle_filter, spawn_point)
-        controller = KeyboardControl(world, start_in_autopilot)
+        world = World(hud)
+        controller = KeyboardControl(hud)
 
         clock = pygame.time.Clock()
 
         while not rospy.core.is_shutdown():
             clock.tick_busy_loop(60)
-            if controller.parse_events(world, clock):
+            if controller.parse_events(clock):
                 return
-            world.tick(clock)
+            hud.tick(clock)
             world.render(display)
             pygame.display.flip()
 

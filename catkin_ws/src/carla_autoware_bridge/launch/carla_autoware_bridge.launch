@@ -25,7 +25,7 @@
   <include file="$(find carla_client)/launch/carla_client.launch" >
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
-    <arg name='port' value='$(arg vehicle_filter)'/>
+    <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
   </include>
 
   <!-- mission planning -->

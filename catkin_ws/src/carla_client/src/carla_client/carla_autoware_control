@@ -38,6 +38,8 @@ class World(object):
     def __init__(self, carla_world, actor_filter, actor_spawnpoint):
         self.world = carla_world
         self.player = None
+        self.collision_sensor = None
+        self.lane_invasion_sensor = None
         self.gnss_sensor = None
         self.lidar_sensor = None
         self.front_camera = None
@@ -77,22 +79,15 @@ class World(object):
                 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
                 self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
+        self.collision_sensor = carla_autoware_sensors.CollisionSensor(self.player)
+        self.lane_invasion_sensor = carla_autoware_sensors.LaneInvasionSensor(self.player)
         self.gnss_sensor = carla_autoware_sensors.GnssSensor(self.player)
         self.lidar_sensor = carla_autoware_sensors.LidarSensor(self.player)
         self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
-        self.view_camera = ViewCamera(self.player)
+        self.view_camera = carla_autoware_sensors.ViewCamera(self.player)
 
     def destroy(self):
-        actors = [
-            self.view_camera.sensor,
-            self.front_camera.sensor,
-            self.gnss_sensor.sensor,
-            self.lidar_sensor.sensor,
-            self.player]
-
-        for actor in actors:
-            if actor is not None:
-                actor.destroy()
+        self.player.destroy()
 
 # ==============================================================================
 # -- main() --------------------------------------------------------------------

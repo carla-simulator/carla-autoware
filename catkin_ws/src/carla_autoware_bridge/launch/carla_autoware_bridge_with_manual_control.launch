@@ -11,8 +11,8 @@
 
   <!-- common -->
   <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch">
-    <arg name='host' default='$(arg host)'/>
-    <arg name='port' default='$(arg port)'/>
+    <arg name='host' value='$(arg host)'/>
+    <arg name='port' value='$(arg port)'/>
   </include>
 
 </launch>
