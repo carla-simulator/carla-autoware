@@ -3,10 +3,12 @@
   <arg name='host' default='localhost'/>
   <arg name='port' default='2000'/>
 
+  <!-- enable autopilot -->
+  <node pkg="rostopic" type="rostopic" name="enable_autopilot_rostopic"
+        args="pub -l /carla/ego_vehicle/enable_autopilot std_msgs/Bool '{ data: true}' " />
+
   <!-- carla manual control -->
-  <include file="$(find carla_client)/launch/carla_manual_control.launch">
-      <arg name="start_in_autopilot" value="True" />
-  </include>
+  <include file="$(find carla_client)/launch/carla_manual_control.launch"/>
 
   <!-- pcl map capturing -->
   <include file="$(find pcl_recorder)/launch/pcl_recorder.launch" />
