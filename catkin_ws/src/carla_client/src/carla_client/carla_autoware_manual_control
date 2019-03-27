@@ -28,7 +28,6 @@ Use ARROWS or WASD keys for control.
     TAB          : change sensor position
     `            : next sensor
     [1-9]        : change to sensor [1-9]
-    C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
 
     F1           : toggle HUD
@@ -53,6 +52,7 @@ from collections import deque
 import random
 
 import rospy
+import tf
 from std_msgs.msg import Bool
 import carla_autoware_sensors
 from sensor_msgs.msg import NavSatFix
@@ -60,6 +60,8 @@ from sensor_msgs.msg import Image
 from carla_ros_bridge.msg import CarlaCollisionEvent
 from carla_ros_bridge.msg import CarlaLaneInvasionEvent
 from carla_ros_bridge.msg import CarlaEgoVehicleControl
+from carla_ros_bridge.msg import CarlaEgoVehicleStatus
+from carla_ros_bridge.msg import CarlaEgoVehicleInfo
 
 try:
     import pygame
@@ -114,29 +116,9 @@ except IndexError:
 import carla
 from carla import ColorConverter as cc
 
-
-
-# ==============================================================================
-# -- Global functions ----------------------------------------------------------
-# ==============================================================================
-
-
-def find_weather_presets():
-    rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
-    name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
-    presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
-    return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
-
-
-def get_actor_display_name(actor, truncate=250):
-    name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
-    return (name[:truncate-1] + u'\u2026') if len(name) > truncate else name
-
-
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
-
 
 class World(object):
     def __init__(self, carla_world, hud, actor_filter, actor_spawnpoint):
@@ -151,17 +133,12 @@ class World(object):
         self.camera_manager = None
         self.lidar_sensor = None
         self.front_camera = None
-        self._weather_presets = find_weather_presets()
-        self._weather_index = 0
         self._actor_filter = actor_filter
         self._actor_spawnpoint = actor_spawnpoint
         self._actuator_data_forwarding_active = False
         self.actuator_data_forward_pub = None
         self.restart()
-        self.world.on_tick(hud.on_world_tick)
-        self.latitude = 0
-        self.longitude = 0
-        self.gnss_subscriber = rospy.Subscriber("/carla/ego_vehicle/gnss/front/gnss", NavSatFix, self.gnss_updated)
+
         self.image_subscriber = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color", Image, self.on_view_image)
         self.collision_subscriber = rospy.Subscriber("/carla/ego_vehicle/collision", CarlaCollisionEvent, self.on_collision)
         self.lane_invasion_subscriber = rospy.Subscriber("/carla/ego_vehicle/lane_invasion", CarlaLaneInvasionEvent, self.on_lane_invasion)
@@ -183,9 +160,6 @@ class World(object):
                 text.append("Unknown ")
         self.hud.notification('Crossed line %s' % ' and '.join(text))
 
-    def gnss_updated(self, data):
-        self.latitude = data.latitude
-        self.longitude = data.longitude
 
     def restart(self):
         self.toggle_actuator_data_forwarding()
@@ -229,22 +203,12 @@ class World(object):
         self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
         self.view_camera = carla_autoware_sensors.ViewCamera(self.player)
 
-        actor_type = get_actor_display_name(self.player)
-        self.hud.notification(actor_type)
-
     def on_view_image(self, image):
         array = np.frombuffer(image.data, dtype=np.dtype("uint8"))
         array = np.reshape(array, (image.height, image.width, 4))
         array = array[:, :, :3]
         array = array[:, :, ::-1]
         self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-
-    def next_weather(self, reverse=False):
-        self._weather_index += -1 if reverse else 1
-        self._weather_index %= len(self._weather_presets)
-        preset = self._weather_presets[self._weather_index]
-        self.hud.notification('Weather: %s' % preset[1])
-        self.player.get_world().set_weather(preset[0])
 
     def toggle_actuator_data_forwarding(self):
         if not self.actuator_data_forward_pub:
@@ -265,15 +229,9 @@ class World(object):
 
     def destroy(self):
         self.image_subscriber.unregister()
-        self.gnss_subscriber.unregister()
         self.collision_subscriber.unregister()
         self.lane_invasion_subscriber.unregister()
-        actors = [
-            self.lane_invasion_sensor.sensor,
-            self.player]
-        for actor in actors:
-            if actor is not None:
-                actor.destroy()
+        self.player.destroy()
 
 
 # ==============================================================================
@@ -311,10 +269,6 @@ class KeyboardControl(object):
                     world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
-                elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
-                    world.next_weather(reverse=True)
-                elif event.key == K_c:
-                    world.next_weather()
                 elif event.key == K_b:
                     world.toggle_actuator_data_forwarding()
                 if isinstance(self._control, CarlaEgoVehicleControl):
@@ -332,13 +286,9 @@ class KeyboardControl(object):
                         self.set_autopilot(self._autopilot_enabled)
                         world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
-            if isinstance(self._control, CarlaEgoVehicleControl):
-                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
-                self._control.reverse = self._control.gear < 0
-                self.vehicle_control_publisher.publish(self._control)
-            elif isinstance(self._control, carla.WalkerControl):
-                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
-                world.player.apply_control(self._control)
+            self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
+            self._control.reverse = self._control.gear < 0
+            self.vehicle_control_publisher.publish(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
@@ -353,22 +303,6 @@ class KeyboardControl(object):
         self._control.steer = round(self._steer_cache, 1)
         self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
         self._control.hand_brake = keys[K_SPACE]
-
-    def _parse_walker_keys(self, keys, milliseconds):
-        self._control.speed = 0.0
-        if keys[K_DOWN] or keys[K_s]:
-            self._control.speed = 0.0
-        if keys[K_LEFT] or keys[K_a]:
-            self._control.speed = .01
-            self._rotation.yaw -= 0.08 * milliseconds
-        if keys[K_RIGHT] or keys[K_d]:
-            self._control.speed = .01
-            self._rotation.yaw += 0.08 * milliseconds
-        if keys[K_UP] or keys[K_w]:
-            self._control.speed = 5.556 if pygame.key.get_mods() & KMOD_SHIFT else 2.778
-        self._control.jump = keys[K_SPACE]
-        self._rotation.yaw = round(self._rotation.yaw, 1)
-        self._control.direction = self._rotation.get_forward_vector()
 
     @staticmethod
     def _is_quit_shortcut(key):
@@ -391,67 +325,75 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self.help = HelpText(pygame.font.Font(mono, 24), width, height)
-        self.server_fps = 0
-        self.frame_number = 0
-        self.simulation_time = 0
         self._show_info = True
         self._info_text = []
-        self._server_clock = pygame.time.Clock()
+        self.vehicle_status = CarlaEgoVehicleStatus()
+        self.vehicle_status_subscriber = rospy.Subscriber("/carla/ego_vehicle/vehicle_status", CarlaEgoVehicleStatus, self.vehicle_status_updated)
+        self.vehicle_info = CarlaEgoVehicleInfo()
+        self.vehicle_info_subscriber = rospy.Subscriber("/carla/ego_vehicle/vehicle_info", CarlaEgoVehicleInfo, self.vehicle_info_updated)
+        self.latitude = 0
+        self.longitude = 0
+        self.gnss_subscriber = rospy.Subscriber("/carla/ego_vehicle/gnss/front/gnss", NavSatFix, self.gnss_updated)
+        self.tf_listener = tf.TransformListener()
 
-    def on_world_tick(self, timestamp):
-        self._server_clock.tick()
-        self.server_fps = self._server_clock.get_fps()
-        self.frame_number = timestamp.frame_count
-        self.simulation_time = timestamp.elapsed_seconds
+    def __del__(self):        
+        self.gnss_subscriber.unregister()
+        self.vehicle_status_subscribe.unregister()
+        self.vehicle_info_subscriber.unregister()
 
     def tick(self, world, clock):
+        self._notifications.tick(world, clock)
+
+    def vehicle_status_updated(self, vehicle_status):
+        self.vehicle_status = vehicle_status
+        self.update_info_text()
+
+    def vehicle_info_updated(self, vehicle_info):
+        self.vehicle_info = vehicle_info
+        self.update_info_text()
+
+    def gnss_updated(self, data):
+        self.latitude = data.latitude
+        self.longitude = data.longitude
+        self.update_info_text()
+
+    def update_info_text(self):
         if not self._show_info:
             return
-        t = world.player.get_transform()
-        v = world.player.get_velocity()
-        c = world.player.get_control()
-        heading = 'N' if abs(t.rotation.yaw) < 89.5 else ''
-        heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
-        heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''
-        heading += 'W' if -0.5 > t.rotation.yaw > -179.5 else ''
-        vehicles = world.world.get_actors().filter('vehicle.*')
+        try:
+            (position, quaternion) = self.tf_listener.lookupTransform('/map', '/ego_vehicle', rospy.Time())
+            roll,pitch,yaw = tf.transformations.euler_from_quaternion(quaternion)
+            yaw = -math.degrees(yaw)
+            x = position[0]
+            y = -position[1]
+            z = position[2]
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            x = 0
+            y = 0
+            z = 0
+            yaw = 0
+        heading = 'N' if abs(yaw) < 89.5 else ''
+        heading += 'S' if abs(yaw) > 90.5 else ''
+        heading += 'E' if 179.5 > yaw > 0.5 else ''
+        heading += 'W' if -0.5 > yaw > -179.5 else ''
         self._info_text = [
-            'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps(),
+            'Vehicle: % 20s' % ' '.join(self.vehicle_info.type.title().split('.')[1:]),
+            'Simulation time: % 12s' % datetime.timedelta(seconds=int(rospy.get_rostime().to_sec())),
             '',
-            'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
-            'Map:     % 20s' % world.map.name,
-            'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
-            '',
-            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
-            u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (t.rotation.yaw, heading),
-            'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
-            'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.latitude, world.longitude)),
-            'Height:  % 18.0f m' % t.location.z,
+            'Speed:   % 15.0f km/h' % (3.6 * self.vehicle_status.velocity), 
+            u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (yaw, heading),
+            'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (x, y)),
+            'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (self.latitude, self.longitude)),
+            'Height:  % 18.0f m' % z,
             '']
-        if isinstance(c, carla.VehicleControl):
-            self._info_text += [
-                ('Throttle:', c.throttle, 0.0, 1.0),
-                ('Steer:', c.steer, -1.0, 1.0),
-                ('Brake:', c.brake, 0.0, 1.0),
-                ('Reverse:', c.reverse),
-                ('Hand brake:', c.hand_brake),
-                ('Manual:', c.manual_gear_shift),
-                'Gear:        %s' % {-1: 'R', 0: 'N'}.get(c.gear, c.gear)]
-        elif isinstance(c, carla.WalkerControl):
-            self._info_text += [
-                ('Speed:', c.speed, 0.0, 5.556),
-                ('Jump:', c.jump)]
-        if len(vehicles) > 1:
-            self._info_text += ['Nearby vehicles:']
-            distance = lambda l: math.sqrt((l.x - t.location.x)**2 + (l.y - t.location.y)**2 + (l.z - t.location.z)**2)
-            vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.player.id]
-            for d, vehicle in sorted(vehicles):
-                if d > 200.0:
-                    break
-                vehicle_type = get_actor_display_name(vehicle, truncate=22)
-                self._info_text.append('% 4dm %s' % (d, vehicle_type))
-        self._notifications.tick(world, clock)
+        self._info_text += [
+            ('Throttle:', self.vehicle_status.control.throttle, 0.0, 1.0),
+            ('Steer:', self.vehicle_status.control.steer, -1.0, 1.0),
+            ('Brake:', self.vehicle_status.control.brake, 0.0, 1.0),
+            ('Reverse:', self.vehicle_status.control.reverse),
+            ('Hand brake:', self.vehicle_status.control.hand_brake),
+            ('Manual:', self.vehicle_status.control.manual_gear_shift),
+            'Gear:        %s' % {-1: 'R', 0: 'N'}.get(self.vehicle_status.control.gear, self.vehicle_status.control.gear)]
 
     def toggle_info(self):
         self._show_info = not self._show_info
