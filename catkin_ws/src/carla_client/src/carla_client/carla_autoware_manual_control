@@ -414,7 +414,7 @@ class HelpText(object):
 # ==============================================================================
 
 def main():
-    rospy.init_node('carla_client')
+    rospy.init_node('carla_manual_control')
 
     #resolution should be similar to carla_autoware_sensors.ViewCamera
     resolution = {"width": 800, "height": 600}
@@ -422,7 +422,6 @@ def main():
     pygame.init()
     pygame.font.init()
     world = None
-    #todo reenable start in autopilot. should be done as rostopic pub
     try:
         display = pygame.display.set_mode(
             (resolution['width'], resolution['height']),
