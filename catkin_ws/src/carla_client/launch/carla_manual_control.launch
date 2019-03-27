@@ -1,0 +1,12 @@
+<!-- -->
+<launch>
+  <arg name="start_in_autopilot" default="False" />
+
+  <param name="/carla/host" value="$(arg host)" />
+  <param name="/carla/port" value="$(arg port)" />
+  <param name="/carla/client/start_in_autopilot" value="$(arg start_in_autopilot)" />
+
+  <node pkg="carla_client" type="carla_autoware_manual_control" name="carla_autoware_manual_control" output="screen"/>
+
+</launch>
+
