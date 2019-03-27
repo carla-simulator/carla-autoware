@@ -3,20 +3,19 @@
   <arg name='host' default='localhost'/>
   <arg name='port' default='2000'/>
 
-  <param name="/carla/client/start_in_autopilot" value="True" /> <!-- for capturing the pcl map, the autopilot drives around -->
-
-  <!-- carla client -->
-  <include file="$(find carla_client)/launch/carla_manual_client.launch" />
+  <!-- carla manual control -->
+  <include file="$(find carla_client)/launch/carla_manual_control.launch">
+      <arg name="start_in_autopilot" value="True" />
+  </include>
 
   <!-- pcl map capturing -->
   <include file="$(find pcl_recorder)/launch/pcl_recorder.launch" />
 
   <!-- common -->
-  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_common.launch" />
-
-  <!-- override parameters -->
-  <param name="carla/host" value="$(arg host)" />
-  <param name="carla/port" value="$(arg port)" />
+  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch">
+      <arg name='host' default='$(arg host)'/>
+      <arg name='port' default='$(arg port)'/>
+  </include>
 
 </launch>
 
