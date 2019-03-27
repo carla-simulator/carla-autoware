@@ -57,6 +57,8 @@ from std_msgs.msg import Bool
 import carla_autoware_sensors
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Image
+from carla_ros_bridge.msg import CarlaCollisionEvent
+from carla_ros_bridge.msg import CarlaLaneInvasionEvent
 
 try:
     import pygame
@@ -160,6 +162,25 @@ class World(object):
         self.longitude = 0
         self.gnss_subscriber = rospy.Subscriber("/carla/ego_vehicle/gnss/front/gnss", NavSatFix, self.gnss_updated)
         self.image_subscriber = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color", Image, self.on_view_image)
+        self.collision_subscriber = rospy.Subscriber("/carla/ego_vehicle/collision", CarlaCollisionEvent, self.on_collision)
+        self.lane_invasion_subscriber = rospy.Subscriber("/carla/ego_vehicle/lane_invasion", CarlaLaneInvasionEvent, self.on_lane_invasion)
+
+    def on_collision(self, data):
+        intensity = math.sqrt(data.normal_impulse.x**2 + data.normal_impulse.y**2 + data.normal_impulse.z**2)
+        self.hud.notification('Collision with {} (impulse {})'.format(data.other_actor_id, intensity))
+
+    def on_lane_invasion(self, data):
+        text = []
+        for marking in data.crossed_lane_markings:
+            if marking is CarlaLaneInvasionEvent.LANE_MARKING_OTHER:
+                text.append("Other")
+            elif marking is CarlaLaneInvasionEvent.LANE_MARKING_BROKEN:
+                text.append("Broken")
+            elif marking is CarlaLaneInvasionEvent.LANE_MARKING_SOLID:
+                text.append("Solid")
+            else:
+                text.append("Unknown ")
+        self.hud.notification('Crossed line %s' % ' and '.join(text))
 
     def gnss_updated(self, data):
         self.latitude = data.latitude
@@ -200,8 +221,8 @@ class World(object):
                 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
                 self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
-        self.collision_sensor = CollisionSensor(self.player, self.hud)
-        self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
+        self.collision_sensor = carla_autoware_sensors.CollisionSensor(self.player)
+        self.lane_invasion_sensor = carla_autoware_sensors.LaneInvasionSensor(self.player)
         self.gnss_sensor = carla_autoware_sensors.GnssSensor(self.player)
         self.lidar_sensor = carla_autoware_sensors.LidarSensor(self.player)
         self.front_camera = carla_autoware_sensors.FrontCamera(self.player)
@@ -244,13 +265,10 @@ class World(object):
     def destroy(self):
         self.image_subscriber.unregister()
         self.gnss_subscriber.unregister()
+        self.collision_subscriber.unregister()
+        self.lane_invasion_subscriber.unregister()
         actors = [
-            self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
-            self.gnss_sensor.sensor,
-            self.front_camera.sensor,
-            self.view_camera.sensor,
-            self.lidar_sensor.sensor,
             self.player]
         for actor in actors:
             if actor is not None:
@@ -386,10 +404,6 @@ class HUD(object):
         heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
         heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''
         heading += 'W' if -0.5 > t.rotation.yaw > -179.5 else ''
-        colhist = world.collision_sensor.get_collision_history()
-        collision = [colhist[x + self.frame_number - 200] for x in range(0, 200)]
-        max_col = max(1.0, max(collision))
-        collision = [x / max_col for x in collision]
         vehicles = world.world.get_actors().filter('vehicle.*')
         self._info_text = [
             'Server:  % 16d FPS' % self.server_fps,
@@ -418,12 +432,6 @@ class HUD(object):
             self._info_text += [
                 ('Speed:', c.speed, 0.0, 5.556),
                 ('Jump:', c.jump)]
-        self._info_text += [
-            '',
-            'Collision:',
-            collision,
-            '',
-            'Number of vehicles: % 8d' % len(vehicles)]
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
             distance = lambda l: math.sqrt((l.x - t.location.x)**2 + (l.y - t.location.y)**2 + (l.z - t.location.z)**2)
@@ -538,72 +546,6 @@ class HelpText(object):
     def render(self, display):
         if self._render:
             display.blit(self.surface, self.pos)
-
-
-# ==============================================================================
-# -- CollisionSensor -----------------------------------------------------------
-# ==============================================================================
-
-
-class CollisionSensor(object):
-    def __init__(self, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.collision')
-        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
-        # We need to pass the lambda a weak reference to self to avoid circular
-        # reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
-
-    def get_collision_history(self):
-        history = collections.defaultdict(int)
-        for frame, intensity in self._history:
-            history[frame] += intensity
-        return history
-
-    @staticmethod
-    def _on_collision(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        actor_type = get_actor_display_name(event.other_actor)
-        self._hud.notification('Collision with %r' % actor_type)
-        impulse = event.normal_impulse
-        intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
-        self._history.append((event.frame_number, intensity))
-        if len(self._history) > 4000:
-            self._history.pop(0)
-
-
-# ==============================================================================
-# -- LaneInvasionSensor --------------------------------------------------------
-# ==============================================================================
-
-
-class LaneInvasionSensor(object):
-    def __init__(self, parent_actor, hud):
-        self.sensor = None
-        self._parent = parent_actor
-        self._hud = hud
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.lane_detector')
-        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
-        # We need to pass the lambda a weak reference to self to avoid circular
-        # reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
-
-    @staticmethod
-    def _on_invasion(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        text = ['%r' % str(x).split()[-1] for x in set(event.crossed_lane_markings)]
-        self._hud.notification('Crossed line %s' % ' and '.join(text))
 
 # ==============================================================================
 # -- main() --------------------------------------------------------------------

@@ -41,7 +41,7 @@
   <include file="$(find carla_autoware_waypoint_publisher)/launch/carla_autoware_waypoint_publisher.launch" />
 
   <!-- convert the vehicle status from carla to autoware -->
-  <node pkg="carla_autoware_bridge" type="carla_to_autoware_vehicle_status.py" name="carla_to_autoware_vehicle_status" output="screen"/>
+  <node pkg="carla_autoware_bridge" type="carla_to_autoware_vehicle_status" name="carla_to_autoware_vehicle_status" output="screen"/>
 
 </launch>
 
