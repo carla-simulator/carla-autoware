@@ -59,6 +59,7 @@ from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Image
 from carla_ros_bridge.msg import CarlaCollisionEvent
 from carla_ros_bridge.msg import CarlaLaneInvasionEvent
+from carla_ros_bridge.msg import CarlaEgoVehicleControl
 
 try:
     import pygame
@@ -283,14 +284,16 @@ class World(object):
 class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
         self.auto_pilot_enable_publisher = rospy.Publisher("/carla/ego_vehicle/enable_autopilot", Bool, queue_size=1)
+        self.vehicle_control_publisher = rospy.Publisher("/carla/ego_vehicle/vehicle_control_cmd", CarlaEgoVehicleControl, queue_size=1)
         self._autopilot_enabled = start_in_autopilot
-        self._control = carla.VehicleControl()
+        self._control = CarlaEgoVehicleControl()
         self.set_autopilot(self._autopilot_enabled)
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def __del__(self):
         self.auto_pilot_enable_publisher.unregister()
+        self.vehicle_control_publisher.unregister()
 
     def set_autopilot(self, enable):
         self.auto_pilot_enable_publisher.publish(Bool(data=enable))
@@ -314,12 +317,11 @@ class KeyboardControl(object):
                     world.next_weather()
                 elif event.key == K_b:
                     world.toggle_actuator_data_forwarding()
-                if isinstance(self._control, carla.VehicleControl):
+                if isinstance(self._control, CarlaEgoVehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
                     elif event.key == K_m:
                         self._control.manual_gear_shift = not self._control.manual_gear_shift
-                        self._control.gear = world.player.get_control().gear
                         world.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
                     elif self._control.manual_gear_shift and event.key == K_COMMA:
                         self._control.gear = max(-1, self._control.gear - 1)
@@ -330,12 +332,13 @@ class KeyboardControl(object):
                         self.set_autopilot(self._autopilot_enabled)
                         world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
-            if isinstance(self._control, carla.VehicleControl):
+            if isinstance(self._control, CarlaEgoVehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
+                self.vehicle_control_publisher.publish(self._control)
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
-            world.player.apply_control(self._control)
+                world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
