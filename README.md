@@ -85,7 +85,6 @@ Now you can start the Autoware Stack by starting all launch files from top to bo
 
 ![Autoware Runtime Manager Settings](docs/images/autoware-rviz-carla-town01-running.png)
 
-
 A special camera is positioned behind the car to see the car and its environment.
 You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
 
@@ -97,12 +96,35 @@ To let the carla autoware bridge connect to a remote Carla Server, execute rosla
     roslaunch host:=<hostname> port:=<port number> carla_autoware_bridge carla_autoware_bridge.launch
 
 
+## Development support
 
-# Design
+### ROS Manual Control
 
-The bridge contains two Carla Clients.
+A manual control is available, that is completely based on ROS. You can execute it either together with the bridge:
 
-1. ROS Bridge - Monitors existing actors in Carla, publishes changes on ROS Topics
-2. Ego Vehicle Client - Instantiation of the ego vehicle. Further communication to Carla is only done for visualization purposes.
+    roslaunch carla_autoware_bridge carla_autoware_bridge_with_manual_control.launch
+
+or separately:
+
+    #execute carla-ros-bridge
+    roslaunch carla_autoware_bridge carla_autoware_bridge
+
+    #execute manual control
+    roslaunch carla_client carla_manual_control.launch
+
+#### Manual steering
+
+Press `B` to be able to steer the ego vehicle within ROS manual control.
+
+Internally, this is done by stopping the conversion from the Autoware control message to AckermannDrive within the node `vehiclecmd_to_ackermanndrive`. The relevant ros-topic is `/vehicle_control_manual_override`.
+
+## Design
+
+The bridge contains three Carla Clients.
+
+1. ROS Bridge - Monitors existing actors in Carla, publishes changes on ROS Topics (e.g. new sensor data)
+2. Ego Vehicle - Instantiation of the ego vehicle with its sensor setup.
+3. Waypoint Calculation - Uses the Carla Python API to calculate a route.
 
 ![Design Overview](docs/images/design.png)
+
