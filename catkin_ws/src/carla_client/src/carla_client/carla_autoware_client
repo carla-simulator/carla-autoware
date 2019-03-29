@@ -42,7 +42,9 @@ class GnssSensor(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=1.0, z=2.8)), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- LidarSensor ---------------------------------------------------------------
@@ -62,7 +64,9 @@ class LidarSensor(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.4)), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- FrontCameraSensor ---------------------------------------------------------
@@ -76,7 +80,9 @@ class FrontCamera(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0, z=2.0)), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- CameraSensor for Visualization --------------------------------------------
@@ -92,7 +98,9 @@ class ViewCamera(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- CollisionSensor -----------------------------------------------------------
@@ -105,7 +113,9 @@ class CollisionSensor(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- LaneInvasionSensor --------------------------------------------------------
@@ -118,7 +128,9 @@ class LaneInvasionSensor(object):
         self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent_actor)
 
     def __del__(self):
-        self.sensor.destroy()
+        if self.sensor.is_alive:
+            self.sensor.destroy()
+        self.sensor = None
 
 # ==============================================================================
 # -- EgoVehicle ---------------------------------------------------------------------
@@ -216,7 +228,8 @@ class EgoVehicle(object):
         self.lidar_sensor = None
         self.front_camera = None
         self.view_camera = None
-        self.player.destroy()
+        if self.player and self.player.is_alive:
+            self.player.destroy()
         self.player = None
 
 # ==============================================================================
@@ -233,18 +246,18 @@ def main():
     rospy.loginfo('listening to server %s:%s', host, port)
     rospy.loginfo('using vehicle filter: %s', vehicle_filter)
     
-    egoVehicle = None
+    ego_vehicle = None
     try:
         client = carla.Client(host, port)
         client.set_timeout(2.0)
 
-        egoVehicle = EgoVehicle(client.get_world(), vehicle_filter)
+        ego_vehicle = EgoVehicle(client.get_world(), vehicle_filter)
 
         rospy.spin()
 
     finally:
-        if egoVehicle is not None:
-            egoVehicle.destroy()
+        if ego_vehicle is not None:
+            ego_vehicle.destroy()
 
 
 if __name__ == '__main__':
