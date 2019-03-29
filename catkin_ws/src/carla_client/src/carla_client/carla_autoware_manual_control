@@ -139,8 +139,8 @@ class World(object):
 
 class KeyboardControl(object):
     def __init__(self, hud):
+        self.vehicle_control_manual_override_publisher = rospy.Publisher("/vehicle_control_manual_override", Bool, queue_size=1, latch=True)
         self.vehicle_control_manual_override = False
-        self.vehicle_control_manual_override_publisher = None
         self.auto_pilot_enable_publisher = rospy.Publisher("/carla/ego_vehicle/enable_autopilot", Bool, queue_size=1)
         self.vehicle_control_publisher = rospy.Publisher("/carla/ego_vehicle/vehicle_control_cmd", CarlaEgoVehicleControl, queue_size=1)
         self._autopilot_enabled = False
@@ -148,18 +148,17 @@ class KeyboardControl(object):
         self.set_autopilot(self._autopilot_enabled)
         self._steer_cache = 0.0
         self.hud = hud
+        self.set_vehicle_control_manual_override(self.vehicle_control_manual_override) # disable manual override
         self.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def __del__(self):
         self.auto_pilot_enable_publisher.unregister()
         self.vehicle_control_publisher.unregister()
+        self.vehicle_control_manual_override_publisher.unregister()
 
-    def toggle_vehicle_control_manual_override(self):
-        if not self.vehicle_control_manual_override_publisher:
-            self.vehicle_control_manual_override_publisher = rospy.Publisher("/vehicle_control_manual_override", Bool, queue_size=1)
-        self.vehicle_control_manual_override = not self.vehicle_control_manual_override
-        self.hud.notification('Set vehicle control manual override to: {}'.format(self.vehicle_control_manual_override))
-        self.vehicle_control_manual_override_publisher.publish((Bool(data=self.vehicle_control_manual_override)))
+    def set_vehicle_control_manual_override(self, enable):
+        self.hud.notification('Set vehicle control manual override to: {}'.format(enable))
+        self.vehicle_control_manual_override_publisher.publish((Bool(data=enable)))
 
     def set_autopilot(self, enable):
         self.auto_pilot_enable_publisher.publish(Bool(data=enable))
@@ -176,7 +175,8 @@ class KeyboardControl(object):
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     self.hud.help.toggle()
                 elif event.key == K_b:
-                    self.toggle_vehicle_control_manual_override()
+                    self.vehicle_control_manual_override = not self.vehicle_control_manual_override
+                    self.set_vehicle_control_manual_override(self.vehicle_control_manual_override)
                 if event.key == K_q:
                     self._control.gear = 1 if self._control.reverse else -1
                 elif event.key == K_m:
