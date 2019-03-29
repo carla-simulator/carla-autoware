@@ -14,6 +14,9 @@ import sys
 import glob
 import os
 import random
+import math
+from tf.transformations import euler_from_quaternion
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
@@ -122,7 +125,7 @@ class LaneInvasionSensor(object):
 # ==============================================================================
 
 class EgoVehicle(object):
-    def __init__(self, carla_world, actor_filter, actor_spawnpoint):
+    def __init__(self, carla_world, actor_filter):
         self.world = carla_world
         self.player = None
         self.collision_sensor = None
@@ -132,23 +135,50 @@ class EgoVehicle(object):
         self.front_camera = None
         self.view_camera = None
         self.actor_filter = actor_filter
-        self.actor_spawnpoint = actor_spawnpoint
+        self.actor_spawnpoint = None
+        self.initialpose_subscriber = rospy.Subscriber("/initialpose", PoseWithCovarianceStamped, self.on_initialpose)
+        self.restart()
+
+    def on_initialpose(self, initial_pose):
+        """
+        Callback for /initialpose
+
+        Receiving an initial pose (e.g. from RVIZ '2D Pose estimate') triggers a respawn.
+
+        :return:
+        """
+        self.actor_spawnpoint = initial_pose.pose.pose
         self.restart()
 
     def restart(self):
-        # Get a random blueprint.
+        """
+        (Re)spawns the vehicle
+
+        Either at a given actor_spawnpoint or at a random Carla spawnpoint
+
+        :return:
+        """
+        # Get vehicle blueprint.
         blueprint = random.choice(self.world.get_blueprint_library().filter(self.actor_filter))
         blueprint.set_attribute('role_name', 'ego_vehicle')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
-        # Spawn the player.
+        # Spawn the vehicle.
         if self.actor_spawnpoint:
             spawn_point = carla.Transform()
-            spawn_point.location.x = self.actor_spawnpoint['X']
-            spawn_point.location.y = self.actor_spawnpoint['Y']
-            spawn_point.location.z = self.actor_spawnpoint['Z']
-            spawn_point.rotation.yaw = self.actor_spawnpoint['Yaw']
+            spawn_point.location.x = self.actor_spawnpoint.position.x
+            spawn_point.location.y = -self.actor_spawnpoint.position.y
+            spawn_point.location.z = self.actor_spawnpoint.position.z + 2 # spawn 2m above ground
+            quaternion = (
+                self.actor_spawnpoint.orientation.x,
+                self.actor_spawnpoint.orientation.y,
+                self.actor_spawnpoint.orientation.z,
+                self.actor_spawnpoint.orientation.w
+            )
+            roll,pitch,yaw = euler_from_quaternion(quaternion)
+            spawn_point.rotation.yaw = -math.degrees(yaw)
+            rospy.loginfo("Spawn at x={} y={} z={} yaw={}".format(spawn_point.location.x, spawn_point.location.y, spawn_point.location.z, spawn_point.rotation.yaw))
             if self.player is not None:
                 self.destroy()
             while self.player is None:
@@ -174,7 +204,20 @@ class EgoVehicle(object):
         self.view_camera = ViewCamera(self.player)
 
     def destroy(self):
+        del self.collision_sensor
+        del self.lane_invasion_sensor
+        del self.gnss_sensor
+        del self.lidar_sensor
+        del self.front_camera
+        del self.view_camera
+        self.collision_sensor = None
+        self.lane_invasion_sensor = None
+        self.gnss_sensor = None
+        self.lidar_sensor = None
+        self.front_camera = None
+        self.view_camera = None
         self.player.destroy()
+        self.player = None
 
 # ==============================================================================
 # -- main() --------------------------------------------------------------------
@@ -186,29 +229,20 @@ def main():
     host = rospy.get_param('/carla/host', '127.0.0.1')
     port = rospy.get_param('/carla/port', '2000')
     vehicle_filter = rospy.get_param('/carla/client/vehicle_filter', 'vehicle.*')
-    spawn_point = rospy.get_param('/carla/client/spawn_point',{})
 
     rospy.loginfo('listening to server %s:%s', host, port)
     rospy.loginfo('using vehicle filter: %s', vehicle_filter)
     
-    if spawn_point:
-        rospy.loginfo('spawning at %s', spawn_point)
-    else:
-        rospy.loginfo('spawning at random point')
-    
     egoVehicle = None
-
     try:
         client = carla.Client(host, port)
         client.set_timeout(2.0)
 
-        egoVehicle = EgoVehicle(client.get_world(), vehicle_filter, spawn_point)
+        egoVehicle = EgoVehicle(client.get_world(), vehicle_filter)
 
-        while not rospy.is_shutdown():
-            rospy.sleep(1)
+        rospy.spin()
 
     finally:
-
         if egoVehicle is not None:
             egoVehicle.destroy()
 

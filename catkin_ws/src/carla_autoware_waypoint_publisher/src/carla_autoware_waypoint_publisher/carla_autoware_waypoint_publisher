@@ -17,64 +17,107 @@ from agents.navigation.local_planner import compute_connection, RoadOption
 from autoware_msgs.msg import LaneArray
 from autoware_msgs.msg import Lane
 from autoware_msgs.msg import Waypoint
-
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped
+from tf.transformations import euler_from_quaternion,quaternion_from_euler
 
 class CarlaToAutowareWaypointConverter(object):
     """
-    This class generates a random plan of waypoints to follow.
+    This class generates a plan of waypoints to follow.
     
-    The calculation is done whenever the hero vehicle appears.
+    The calculation is done whenever:
+    - the hero vehicle appears
+    - a new goal is set
     """
     WAYPOINT_DISTANCE = 2.0
     
     def __init__(self, carla_world):
-        self._world = carla_world
-        self._map = carla_world.get_map()
-        self._vehicle = None
-        self._pub = rospy.Publisher('/lane_waypoints_array', LaneArray, queue_size=10, latch=True)
+        self.world = carla_world
+        self.map = carla_world.get_map()
+        self.ego_vehicle = None
+        self.waypoint_publisher = rospy.Publisher('/lane_waypoints_array', LaneArray, queue_size=10, latch=True)
+
+        #set initial goal
+        self.goal = self.world.get_map().get_spawn_points()[0]
         
-        rospy.loginfo("Waiting for hero vehicle...")
+        self.current_route = None
+        self.goal_subscriber = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.on_goal)
+        
         self._update_lock = threading.Lock()
         
-        #use callback to wait for hero vehicle
-        self._world.on_tick(self._carla_time_tick)
+        #use callback to wait for ego vehicle
+        rospy.loginfo("Waiting for ego vehicle...")
+        self.world.on_tick(self.find_ego_vehicle_actor)
 
+    def on_goal(self, goal):
+        """
+        Callback for /move_base_simple/goal
 
-    def _carla_time_tick(self, carla_timestamp):
-        if self._update_lock.acquire():
+        Receiving a goal (e.g. from RVIZ '2D Nav Goal') triggers a new route calculation.
+
+        :return:
+        """
+        carla_goal = carla.Transform()
+        carla_goal.location.x = goal.pose.position.x
+        carla_goal.location.y = -goal.pose.position.y
+        carla_goal.location.z = goal.pose.position.z + 2 # 2m above ground
+        quaternion = (
+            goal.pose.orientation.x,
+            goal.pose.orientation.y,
+            goal.pose.orientation.z,
+            goal.pose.orientation.w
+        )
+        roll,pitch,yaw = euler_from_quaternion(quaternion)
+        carla_goal.rotation.yaw = -math.degrees(yaw)
+
+        self.goal = carla_goal
+        self.reroute()
+
+    def reroute(self):
+        if self.ego_vehicle is None or self.goal is None:
+            #no ego vehicle, remove route if published
+            self.current_route = None
+            self.publish_waypoints()
+        else:
+            self.current_route = self.calculate_route(self.goal)
+        self.publish_waypoints()
+
+    def find_ego_vehicle_actor(self, carla_timestamp):
+        with self._update_lock:
             hero = None
-            for actor in self._world.get_actors():
+            for actor in self.world.get_actors():
                 if (actor.attributes.get('role_name') == "ego_vehicle"):
                     hero = actor
-            
-            if self._vehicle is None and hero is not None:
-                self._vehicle = hero
-                rospy.loginfo("Discovered new hero vehicle.")
-                rospy.loginfo("Calculating random waypoint plan...")
-                spawn_point = self._world.get_map().get_spawn_points()[0]
-                self._current_plan = self.set_destination((spawn_point.location.x,
-                                       spawn_point.location.y,
-                                       spawn_point.location.z))
-                
-                rospy.loginfo("Publishing waypoints...")
-                self.publish_waypoints()
-            elif self._vehicle is not None and hero is None:
-                rospy.loginfo("Hero vehicle disappeared. Removing plan...")
-                self._vehicle = None
-                self._current_plan = None
-                self.publish_waypoints()
-            
-            self._update_lock.release()
+                    break
+
+            ego_vehicle_changed = False
+            if hero is None and self.ego_vehicle is not None:
+                ego_vehicle_changed = True
+
+            if not ego_vehicle_changed and hero is not None and self.ego_vehicle is None:
+                ego_vehicle_changed = True
+
+            if not ego_vehicle_changed and hero is not None and self.ego_vehicle is not None and hero.id != self.ego_vehicle.id:
+                ego_vehicle_changed = True
+
+            if ego_vehicle_changed:
+                rospy.loginfo("Ego vehicle changed.")
+                self.ego_vehicle = hero
+                self.reroute()
         
 
-    def set_destination(self, location):
+    def calculate_route(self, goal):
         """
         This function is based on basic_planner.set_destination()
         """
-        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(carla.Location(location[0],
-                                                             location[1],
-                                                             location[2]))
+        rospy.loginfo("Calculating route to x={}, y={}, z={}".format(
+                           goal.location.x,
+                           goal.location.y,
+                           goal.location.z))
+        start_waypoint = self.map.get_waypoint(self.ego_vehicle.get_location())
+        end_waypoint = self.map.get_waypoint(carla.Location(goal.location.x,
+                                                             goal.location.y,
+                                                             goal.location.z))
   
         current_waypoint = start_waypoint
         active_list = [ [(current_waypoint, RoadOption.LANEFOLLOW)] ]
@@ -116,8 +159,8 @@ class CarlaToAutowareWaypointConverter(object):
         lane = Lane()
         lane.header.frame_id = "/map"
         msg.lanes.append(lane)
-        if self._current_plan is not None:
-            for wp in self._current_plan:
+        if self.current_route is not None:
+            for wp in self.current_route:
                 waypoint = Waypoint()
                 waypoint.pose.pose.position.x = wp[0].transform.location.x
                 waypoint.pose.pose.position.y = -wp[0].transform.location.y
@@ -132,7 +175,7 @@ class CarlaToAutowareWaypointConverter(object):
                 #file format for autoware waypoint loader:
                 #print("{},{},{},{},0,0\n".format(wp[0].transform.location.x,-wp[0].transform.location.y,38.1,math.radians(wp[0].transform.rotation.yaw)))
 
-        self._pub.publish(msg)
+        self.waypoint_publisher.publish(msg)
         rospy.loginfo("Published {} waypoints.".format(len(msg.lanes[0].waypoints)))
 
 

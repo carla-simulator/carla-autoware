@@ -98,6 +98,17 @@ To let the carla autoware bridge connect to a remote Carla Server, execute rosla
 
 ## Development support
 
+### Carla Client
+
+When starting the carla_autoware_bridge a random spawn point and a fixed goal is used to calculate the route.
+
+To override this, you can use RVIZ.
+
+![Autoware Runtime Manager Settings](docs/images/rviz_set_start_goal.png)
+
+- selecting a Pose with '2D Pose Estimate' will delete the current ego_vehicle and respawn it at the specified position.
+- selecting a Pose with '2D Nav Goal' will set a new goal within `carla_autoware_waypoint_publisher`.
+
 ### ROS Manual Control
 
 A manual control is available, that is completely based on ROS. You can execute it either together with the bridge:
