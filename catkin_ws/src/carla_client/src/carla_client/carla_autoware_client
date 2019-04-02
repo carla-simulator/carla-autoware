@@ -6,15 +6,17 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
+"""
+Carla Client to spawn the ego vehicle
+"""
 from __future__ import print_function
 
-import rospy
 import sys
 import glob
 import os
 import random
 import math
+import rospy
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
@@ -29,17 +31,23 @@ try:
 except IndexError:
     pass
 
-import carla
+import carla  # pylint: disable=wrong-import-position
 
 # ==============================================================================
 # -- GnssSensor ----------------------------------------------------------------
 # ==============================================================================
 
+
 class GnssSensor(object):
+    """
+    GNSS Sensor
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.other.gnss')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=1.0, z=2.8)), attach_to=parent_actor)
+        self.sensor = world.spawn_actor(bp, carla.Transform(
+            carla.Location(x=1.0, z=2.8)), attach_to=parent_actor)
 
     def __del__(self):
         if self.sensor.is_alive:
@@ -50,7 +58,12 @@ class GnssSensor(object):
 # -- LidarSensor ---------------------------------------------------------------
 # ==============================================================================
 
+
 class LidarSensor(object):
+    """
+    Lidar Sensor
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
@@ -61,7 +74,8 @@ class LidarSensor(object):
         bp.set_attribute('upper_fov', '2.0')
         bp.set_attribute('lower_fov', '-26.8')
         bp.set_attribute('rotation_frequency', '20')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=2.4)), attach_to=parent_actor)
+        self.sensor = world.spawn_actor(bp, carla.Transform(
+            carla.Location(x=0.0, z=2.4)), attach_to=parent_actor)
 
     def __del__(self):
         if self.sensor.is_alive:
@@ -72,12 +86,18 @@ class LidarSensor(object):
 # -- FrontCameraSensor ---------------------------------------------------------
 # ==============================================================================
 
+
 class FrontCamera(object):
+    """
+    Front camera for detections
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.camera.rgb')
         bp.set_attribute('role_name', 'front')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0, z=2.0)), attach_to=parent_actor)
+        self.sensor = world.spawn_actor(bp, carla.Transform(
+            carla.Location(x=2.0, z=2.0)), attach_to=parent_actor)
 
     def __del__(self):
         if self.sensor.is_alive:
@@ -88,14 +108,20 @@ class FrontCamera(object):
 # -- CameraSensor for Visualization --------------------------------------------
 # ==============================================================================
 
+
 class ViewCamera(object):
+    """
+    View camera for visualization purposes
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.camera.rgb')
         bp.set_attribute('role_name', 'viewFromBehind')
         bp.set_attribute('image_size_x', '800')
         bp.set_attribute('image_size_y', '600')
-        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)), attach_to=parent_actor)
+        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(
+            x=-5.5, z=2.8), carla.Rotation(pitch=-15)), attach_to=parent_actor)
 
     def __del__(self):
         if self.sensor.is_alive:
@@ -106,7 +132,12 @@ class ViewCamera(object):
 # -- CollisionSensor -----------------------------------------------------------
 # ==============================================================================
 
+
 class CollisionSensor(object):
+    """
+    Collision sensor
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.other.collision')
@@ -121,7 +152,12 @@ class CollisionSensor(object):
 # -- LaneInvasionSensor --------------------------------------------------------
 # ==============================================================================
 
+
 class LaneInvasionSensor(object):
+    """
+    Lane invasion sensor
+    """
+
     def __init__(self, parent_actor):
         world = parent_actor.get_world()
         bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
@@ -136,7 +172,12 @@ class LaneInvasionSensor(object):
 # -- EgoVehicle ---------------------------------------------------------------------
 # ==============================================================================
 
+
 class EgoVehicle(object):
+    """
+    Handles the spawning of the ego vehicle and its sensors
+    """
+
     def __init__(self, carla_world, actor_filter):
         self.world = carla_world
         self.player = None
@@ -148,7 +189,8 @@ class EgoVehicle(object):
         self.view_camera = None
         self.actor_filter = actor_filter
         self.actor_spawnpoint = None
-        self.initialpose_subscriber = rospy.Subscriber("/initialpose", PoseWithCovarianceStamped, self.on_initialpose)
+        self.initialpose_subscriber = rospy.Subscriber(
+            "/initialpose", PoseWithCovarianceStamped, self.on_initialpose)
         self.restart()
 
     def on_initialpose(self, initial_pose):
@@ -181,16 +223,19 @@ class EgoVehicle(object):
             spawn_point = carla.Transform()
             spawn_point.location.x = self.actor_spawnpoint.position.x
             spawn_point.location.y = -self.actor_spawnpoint.position.y
-            spawn_point.location.z = self.actor_spawnpoint.position.z + 2 # spawn 2m above ground
+            spawn_point.location.z = self.actor_spawnpoint.position.z + 2  # spawn 2m above ground
             quaternion = (
                 self.actor_spawnpoint.orientation.x,
                 self.actor_spawnpoint.orientation.y,
                 self.actor_spawnpoint.orientation.z,
                 self.actor_spawnpoint.orientation.w
             )
-            roll,pitch,yaw = euler_from_quaternion(quaternion)
+            _, _, yaw = euler_from_quaternion(quaternion)
             spawn_point.rotation.yaw = -math.degrees(yaw)
-            rospy.loginfo("Spawn at x={} y={} z={} yaw={}".format(spawn_point.location.x, spawn_point.location.y, spawn_point.location.z, spawn_point.rotation.yaw))
+            rospy.loginfo("Spawn at x={} y={} z={} yaw={}".format(spawn_point.location.x,
+                                                                  spawn_point.location.y,
+                                                                  spawn_point.location.z,
+                                                                  spawn_point.rotation.yaw))
             if self.player is not None:
                 self.destroy()
             while self.player is None:
@@ -216,6 +261,9 @@ class EgoVehicle(object):
         self.view_camera = ViewCamera(self.player)
 
     def destroy(self):
+        """
+        destroy the current ego vehicle and its sensors
+        """
         del self.collision_sensor
         del self.lane_invasion_sensor
         del self.gnss_sensor
@@ -236,7 +284,11 @@ class EgoVehicle(object):
 # -- main() --------------------------------------------------------------------
 # ==============================================================================
 
+
 def main():
+    """
+    main function
+    """
     rospy.init_node('carla_client')
 
     host = rospy.get_param('/carla/host', '127.0.0.1')
@@ -245,7 +297,7 @@ def main():
 
     rospy.loginfo('listening to server %s:%s', host, port)
     rospy.loginfo('using vehicle filter: %s', vehicle_filter)
-    
+
     ego_vehicle = None
     try:
         client = carla.Client(host, port)
@@ -263,5 +315,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except rospy.ROSInterruptException: pass
-        
+    except rospy.ROSInterruptException:
+        pass
