@@ -4,27 +4,35 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-#
-## receive nav_msgs::Odometry and publish geometry_msgs::PoseStamped
-
+"""
+receive nav_msgs::Odometry and publish geometry_msgs::PoseStamped
+"""
 import rospy
-from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 
 pub = rospy.Publisher('gnss_pose', PoseStamped, queue_size=1)
 
+
 def callback(data):
-    pose = PoseStamped();
+    """
+    callback for current pose
+    """
+    pose = PoseStamped()
     pose.header = data.header
     #pose.header.frame_id = "map";
-    pose.pose = data.pose.pose;
-    pub.publish(pose);
+    pose.pose = data.pose.pose
+    pub.publish(pose)
+
 
 def convert_odometry_to_pose():
+    """
+    main loop
+    """
     rospy.init_node('convert_odometry_to_pose', anonymous=True)
     rospy.Subscriber("/carla/ego_vehicle/odometry", Odometry, callback)
     rospy.spin()
+
 
 if __name__ == '__main__':
     convert_odometry_to_pose()
