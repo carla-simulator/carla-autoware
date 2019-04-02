@@ -21,15 +21,15 @@
     <arg name='port' value='$(arg port)'/>
   </include>
 
-  <!-- carla client -->
-  <include file="$(find carla_client)/launch/carla_client.launch" >
+  <!-- carla autoware client -->
+  <include file="$(find carla_autoware_client)/launch/carla_autoware_client.launch" >
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
     <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
   </include>
 
   <!-- mission planning -->
-  <include file="$(find carla_autoware_waypoint_publisher)/launch/carla_autoware_waypoint_publisher.launch" >
+  <include file="$(find carla_waypoint_publisher)/launch/carla_waypoint_publisher.launch" >
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
   </include>
@@ -65,9 +65,11 @@
     <param name="wheelbase" value="$(arg wheelbase)"/>
   </node>
 
-
   <!-- convert the vehicle status from carla to autoware -->
   <node pkg="carla_autoware_bridge" type="carla_to_autoware_vehicle_status" name="carla_to_autoware_vehicle_status" output="screen"/>
+
+  <!-- convert waypoint path to autoware lane_array -->
+  <node pkg="carla_autoware_bridge" type="carla_to_autoware_waypoints" name="carla_to_autoware_waypoints" output="screen"/>
 
 </launch>
 

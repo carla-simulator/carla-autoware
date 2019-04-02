@@ -107,7 +107,7 @@ To override this, you can use RVIZ.
 ![Autoware Runtime Manager Settings](docs/images/rviz_set_start_goal.png)
 
 - selecting a Pose with '2D Pose Estimate' will delete the current ego_vehicle and respawn it at the specified position.
-- selecting a Pose with '2D Nav Goal' will set a new goal within `carla_autoware_waypoint_publisher`.
+- selecting a Pose with '2D Nav Goal' will set a new goal within `carla_waypoint_publisher`.
 
 ### ROS Manual Control
 

@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019 Intel Corporation
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+"""
+receive a path from carla_ros_waypoint_publisher and convert it to autoware
+"""
+import math
+import rospy
+from autoware_msgs.msg import LaneArray
+from autoware_msgs.msg import Lane
+from autoware_msgs.msg import Waypoint
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
+
+pub = rospy.Publisher('/lane_waypoints_array', LaneArray, queue_size=1, latch=True)
+
+
+def path_callback(data):
+    """
+    callback for path. Convert it to Autoware LaneArray and publish it
+    """
+    msg = LaneArray()
+    lane = Lane()
+    lane.header = data.header
+    msg.lanes.append(lane)
+    for pose in data.poses:
+        waypoint = Waypoint()
+        waypoint.pose = pose
+        msg.lanes[0].waypoints.append(waypoint)
+
+    pub.publish(msg)
+
+
+def convert_waypoints_carla_to_autoware():
+    """
+    main loop
+    """
+    rospy.init_node('carla_to_autoware_waypoints', anonymous=True)
+    rospy.Subscriber("/carla/ego_vehicle/waypoints",
+                     Path, path_callback)
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    convert_waypoints_carla_to_autoware()

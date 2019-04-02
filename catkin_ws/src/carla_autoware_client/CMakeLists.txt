@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(carla_client)
+project(carla_autoware_client)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
@@ -15,8 +15,7 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
-  src/carla_client/carla_autoware_client
-  src/carla_client/carla_autoware_manual_control
+  src/carla_autoware_client/carla_autoware_client
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

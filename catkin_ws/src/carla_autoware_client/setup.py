@@ -2,7 +2,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup(
-    packages=['carla_client'],
+    packages=['carla_autoware_client'],
     package_dir={'': 'src'}
 )
 
