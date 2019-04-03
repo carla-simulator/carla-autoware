@@ -39,7 +39,7 @@ class CarlaAutowareEgoVehicle(CarlaEgoVehicleBase):
             },
             {
                 'type': 'sensor.lidar.ray_cast',
-                'role_name': 'front',
+                'role_name': 'sensor',
                 'x': 0.0, 'y': 0.0, 'z': 2.4, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
                 'range': 5000,
                 'channels': 32,
