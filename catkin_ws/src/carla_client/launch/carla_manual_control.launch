@@ -1,7 +1,0 @@
-<!-- -->
-<launch>
-
-  <node pkg="carla_client" type="carla_autoware_manual_control" name="carla_autoware_manual_control" output="screen"/>
-
-</launch>
-
