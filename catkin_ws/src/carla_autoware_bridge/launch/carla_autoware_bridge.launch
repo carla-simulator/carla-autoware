@@ -21,8 +21,8 @@
     <arg name='port' value='$(arg port)'/>
   </include>
 
-  <!-- carla autoware client -->
-  <include file="$(find carla_autoware_client)/launch/carla_autoware_client.launch" >
+  <!-- carla autoware ego vehicle -->
+  <include file="$(find carla_autoware_ego_vehicle)/launch/carla_autoware_ego_vehicle.launch" >
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
     <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
@@ -51,7 +51,7 @@
     remap carla front camera to autoware
     @todo: to reduce load, Autoware should directly use the Carla-topic.
   -->
-  <node pkg="topic_tools" type="relay" name="imag_relay" args="/carla/ego_vehicle/camera/rgb/front/image_color /image_raw"/>
+  <node pkg="topic_tools" type="relay" name="imag_relay" args="/carla/ego_vehicle/camera/rgb/sensor/image_color /image_raw"/>
 
   <!-- 
     # GNSS #

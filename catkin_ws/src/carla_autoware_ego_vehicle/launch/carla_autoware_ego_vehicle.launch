@@ -8,6 +8,6 @@
   <param name="/carla/port" value="$(arg port)" />
   <param name="/carla/client/vehicle_filter" value="$(arg vehicle_filter)" />
 
-  <node pkg="carla_autoware_client" type="carla_autoware_client" name="carla_autoware_client" output="screen"/>
+  <node pkg="carla_autoware_ego_vehicle" type="carla_autoware_ego_vehicle" name="carla_autoware_ego_vehicle" output="screen"/>
 </launch>
 
