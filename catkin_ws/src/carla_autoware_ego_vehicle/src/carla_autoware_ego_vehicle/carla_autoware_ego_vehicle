@@ -8,11 +8,15 @@
 Carla Autoware Ego Vehicle
 """
 
-from carla_ego_vehicle.carla_ego_vehicle_base import CarlaEgoVehicleBase
+from carla_ego_vehicle.carla_ego_vehicle_base import CarlaEgoVehicleBase  # pylint: disable=no-name-in-module,import-error
+
 
 class CarlaAutowareEgoVehicle(CarlaEgoVehicleBase):
+    """
+    Carla Autoware Ego Vehicle
+    """
 
-    def sensors(self): 
+    def sensors(self):
         """
         define all sensors attached to your ego vehicle
         """
@@ -78,8 +82,6 @@ def main():
         if ego_vehicle is not None:
             ego_vehicle.destroy()
 
+
 if __name__ == '__main__':
-    try:
-        main()
-    except rospy.ROSInterruptException:
-        pass
+    main()

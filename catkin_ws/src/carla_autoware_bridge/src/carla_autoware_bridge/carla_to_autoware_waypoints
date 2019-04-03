@@ -7,12 +7,10 @@
 """
 receive a path from carla_ros_waypoint_publisher and convert it to autoware
 """
-import math
 import rospy
 from autoware_msgs.msg import LaneArray
 from autoware_msgs.msg import Lane
 from autoware_msgs.msg import Waypoint
-from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 
 pub = rospy.Publisher('/lane_waypoints_array', LaneArray, queue_size=1, latch=True)
