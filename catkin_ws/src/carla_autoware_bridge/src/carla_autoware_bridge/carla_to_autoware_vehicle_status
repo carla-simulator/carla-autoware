@@ -9,8 +9,8 @@ receive carla_ros_bridge::CarlaEgoVehicleStatus and publishes autoware_msgs::Veh
 """
 import math
 import rospy
-from carla_ros_bridge.msg import CarlaEgoVehicleInfo
-from carla_ros_bridge.msg import CarlaEgoVehicleStatus
+from carla_ros_bridge_msgs.msg import CarlaEgoVehicleInfo
+from carla_ros_bridge_msgs.msg import CarlaEgoVehicleStatus
 from autoware_msgs.msg import VehicleStatus
 
 pub = rospy.Publisher('vehicle_status', VehicleStatus, queue_size=1)
