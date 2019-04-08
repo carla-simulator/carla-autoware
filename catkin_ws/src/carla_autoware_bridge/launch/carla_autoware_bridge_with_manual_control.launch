@@ -4,7 +4,7 @@
   <arg name='port' default='2000'/>
 
   <!-- carla ros manual control -->
-  <include file="$(find carla_ego_vehicle)/launch/carla_ros_manual_control.launch" />
+  <include file="$(find carla_manual_control)/launch/carla_manual_control.launch" />
 
   <!-- common -->
   <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch">

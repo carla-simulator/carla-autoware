@@ -16,7 +16,7 @@
     @todo This is currently disabled. Instead the carla_autoware_bridge publishes a ground-truth /gnss_pose
   -->
   <!--
-  <node pkg="topic_tools" type="relay" name="gnss_relay" args="/carla/ego_vehicle/gnss/front/gnss /fix"/> 
+  <node pkg="topic_tools" type="relay" name="gnss_relay" args="/carla/ego_vehicle/gnss/gnss1/fix /fix"/> 
   <include file="$(find gnss_localizer)/launch/fix2tfpose.launch"/>
   -->
 
