@@ -19,7 +19,7 @@ PclRecorder::PclRecorder()
   }
 
   // Create a ROS subscriber for the input point cloud
-  sub = nh.subscribe("/carla/ego_vehicle/lidar/sensor/point_cloud", 1000000, &PclRecorder::callback, this);
+  sub = nh.subscribe("/carla/ego_vehicle/lidar/lidar1/point_cloud", 1000000, &PclRecorder::callback, this);
 }
 
 void PclRecorder::callback(const pcl::PCLPointCloud2::ConstPtr& cloud)
