@@ -1,14 +1,11 @@
 <!-- -->
 <launch>
-  <arg name='host' default='localhost'/>
-  <arg name='port' default='2000'/>
-  <arg name="vehicle_filter" default="vehicle.toyota.prius*" />
+  <arg name="wheelbase" default="2.7" /> <!-- distance between front and back axle in meters -->
 
-  <param name="/vehicle_info/wheel_base" type="double" value="2.7" />
+  <param name="/vehicle_info/wheel_base" type="double" value="$(arg wheelbase)" />
   <param name="/vehicle_info/minimum_turning_radius" type="double" value="5" />
   <param name="/vehicle_info/maximum_steering_angle" type="double" value="70" />
 
-  <arg name="wheelbase" default="2.7" /> <!-- distance between front and back axle in meters -->
 
   <!--
     ##############################
