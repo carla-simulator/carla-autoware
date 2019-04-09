@@ -7,14 +7,11 @@
   <node pkg="rostopic" type="rostopic" name="enable_autopilot_rostopic"
         args="pub -l /carla/ego_vehicle/enable_autopilot std_msgs/Bool '{ data: true}' " />
 
-  <!-- carla manual control -->
-  <include file="$(find carla_client)/launch/carla_manual_control.launch"/>
-
   <!-- pcl map capturing -->
   <include file="$(find pcl_recorder)/launch/pcl_recorder.launch" />
 
   <!-- common -->
-  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch">
+  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_with_manual_control.launch">
       <arg name='host' default='$(arg host)'/>
       <arg name='port' default='$(arg port)'/>
   </include>
