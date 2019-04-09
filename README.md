@@ -5,7 +5,7 @@ Integration of AutoWare AV software with the CARLA simulator
 
 - ROS kinetic
 - Autoware (tested with 1.11.0)
-- PointCloud Map (see [Map Creation](docs/map_creation.md))
+- PointCloud Map
 
 
 ## Opens
