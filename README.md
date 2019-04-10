@@ -5,7 +5,6 @@ Integration of AutoWare AV software with the CARLA simulator
 
 - ROS kinetic
 - Autoware (tested with 1.11.0)
-- PointCloud Map
 
 
 ## Opens
@@ -20,6 +19,12 @@ Integration of AutoWare AV software with the CARLA simulator
 ### Autoware
 
 Setup/build Autoware as described here: https://github.com/CPFL/Autoware
+
+### Download Point cloud maps
+
+    # Download pointcloud maps for Carla Towns
+    cd ~
+    git clone https://bitbucket.org/carla-simulator/autoware-contents
 
 ### Carla
 
@@ -68,6 +73,7 @@ You need two terminals:
     <path-to-autoware>/ros/run
 
     #execute carla-autoware-bridge and carla-autoware-bridge
+    export CARLA_MAPS_PATH=~/autoware-contents/maps
     export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
     source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
     #either execute a headless Carla client
