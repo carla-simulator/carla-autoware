@@ -5,15 +5,11 @@ Integration of AutoWare AV software with the CARLA simulator
 
 - ROS kinetic
 - Autoware (tested with 1.11.0)
-- PointCloud Map
-
 
 ## Opens
 
 - object detection (especially traffic lights)
 - no compliance with traffic rules (due to missing vector map)
-- vehicle control is not optimal yet (depending on vehicle)
-
 
 ## Setup
 
@@ -21,9 +17,21 @@ Integration of AutoWare AV software with the CARLA simulator
 
 Setup/build Autoware as described here: https://github.com/CPFL/Autoware
 
+### Download Point cloud maps
+
+    # Download pointcloud maps for Carla Towns
+    cd ~
+    git clone https://bitbucket.org/carla-simulator/autoware-contents
+
 ### Carla
 
-Download version of Carla from here: https://github.com/carla-simulator/carla
+    #download docker image (e.g. version 0.9.5)
+    docker pull carlasim/carla:<carla-version>
+
+    #extract the Carla Python API from the image
+    cd ~
+    mkdir carla-python
+    docker run --rm --entrypoint tar carlasim/carla:<carla-version> cC /home/carla/PythonAPI . | tar xvC ~/carla-python
 
 
 ### Carla Autoware Bridge
@@ -57,22 +65,25 @@ You need two terminals:
     #Terminal 1
 
     #execute Carla
-    SDL_VIDEODRIVER=offscreen <path-to-carla>/CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -fps=20
+    #For details, please refer to the CARLA documentation
+    nvidia-docker run -p 2000-2001:2000-2001 -it --rm carlasim/carla:<carla-version> ./CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -carla-server -fps=20
 
 
     #Terminal 2
 
     export CARLA_AUTOWARE_ROOT=~/carla-autoware
+    export CARLA_MAPS_PATH=~/autoware-contents/maps
+    source <path-to-autoware>/ros/install/setup.bash
+    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
+    export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-0.9.5-py2.7-linux-x86_64.egg:~/carla-python/carla/
     
     #execute Autoware (forks into background)
     <path-to-autoware>/ros/run
 
     #execute carla-autoware-bridge and carla-autoware-bridge
-    export PYTHONPATH=<path-to-carla>/PythonAPI/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/
-    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
-    #either execute a headless Carla client
+    #Option1: execute a headless Carla client
     roslaunch carla_autoware_bridge carla_autoware_bridge.launch
-    #or
+    #Option2: including visualization of the ego vehicle and the ability to drive 
     roslaunch carla_autoware_bridge carla_autoware_bridge_with_manual_control.launch
 
 In Autoware Runtime Manager, select the customized launch files:

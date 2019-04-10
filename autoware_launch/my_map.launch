@@ -1,14 +1,7 @@
 <!-- -->
 <launch>
 
-  <!-- TF -->
-  <include file="$(env CARLA_AUTOWARE_ROOT)/autoware_launch/tf.launch"/>
-
-  <!-- 
-    # Points map loader #
-    Out: /points_map
-   -->
-  <node pkg="map_file" type="points_map_loader" name="points_map_loader" args="noupdate $(env CARLA_AUTOWARE_ROOT)/autoware_data/map/map.pcd"/>
+  <!-- the map is loaded within carla_points_map_loader -->
 
   <!--
     # Vector Map loader #

@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019 Intel Corporation
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+"""
+Load pcd map on Carla Map change
+"""
+import threading
+import rospy
+import roslaunch
+
+from carla_ros_bridge_msgs.msg import CarlaMapInfo
+
+
+class CarlaPointsMapLoader(object):
+    """
+    start stop the points map loader if a new map is received
+    """
+
+    def map_callback(self, data):
+        """
+        callback when a new map is set
+        """
+        self.new_map_name = data.map_name
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        rospy.init_node('carla_points_map_loader')
+        self.node = None
+        self.maps_path = rospy.get_param("/carla/maps_path")
+        self.new_map_name = None
+        self.current_map_name = None
+        self.lock = threading.Lock()  # to prevent start/stop while previous action was not finished
+        self.is_active = False
+        self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        self.process = None
+        self.launch = None
+        roslaunch.configure_logging(self.uuid)
+        rospy.Subscriber("/carla/map", CarlaMapInfo, self.map_callback)
+
+    def run(self):
+        """
+        execution loop
+        """
+        rate = rospy.Rate(1)
+        while not rospy.is_shutdown():
+            if self.lock.acquire(False):
+                if self.new_map_name != self.current_map_name:
+                    self.current_map_name = self.new_map_name
+                    if self.is_active:
+                        self.is_active = False
+                        rospy.loginfo("Stopping points_map_loader")
+                        self.process.stop()
+                        self.launch.stop()
+                        self.process = None
+                        self.launch = None
+                        self.node = None
+
+                    map_file = "{}/{}.pcd".format(self.maps_path, self.current_map_name)
+                    rospy.logwarn("Loading map {}...".format(map_file))
+                    self.node = roslaunch.core.Node(
+                        "map_file", "points_map_loader", args="noupdate {}".format(map_file))
+                    self.launch = roslaunch.scriptapi.ROSLaunch()
+                    self.launch.start()
+                    self.process = self.launch.launch(self.node)
+                    self.is_active = self.process.is_alive()
+
+                self.lock.release()
+
+            try:
+                rate.sleep()
+            except rospy.exceptions.ROSInterruptException:
+                pass
+
+    def __del__(self):
+        """
+        Destructor
+        """
+        if self.is_active:
+            if self.process and self.process.is_alive():
+                self.process.stop()
+            if self.launch:
+                self.launch.stop()
+
+
+def main():
+    """
+    main function
+    """
+    points_map_loader = CarlaPointsMapLoader()
+    try:
+        points_map_loader.run()
+    finally:
+        del points_map_loader
+        rospy.loginfo("Done")
+
+
+if __name__ == "__main__":
+    main()
