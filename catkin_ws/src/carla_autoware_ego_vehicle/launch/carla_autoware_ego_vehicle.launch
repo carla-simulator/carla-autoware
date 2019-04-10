@@ -8,8 +8,7 @@
   <param name="/carla/port" value="$(arg port)" />
   <param name="/carla/client/vehicle_filter" value="$(arg vehicle_filter)" />
 
-  <include file="$(find carla_autoware_ego_vehicle)/launch/tf.launch"/>
-
+  <!-- the ego vehicle -->
   <node pkg="carla_autoware_ego_vehicle" type="carla_autoware_ego_vehicle" name="carla_autoware_ego_vehicle" output="screen"/>
 </launch>
 
