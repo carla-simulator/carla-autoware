@@ -75,7 +75,7 @@ You need two terminals:
     export CARLA_MAPS_PATH=~/autoware-contents/maps
     source <path-to-autoware>/ros/install/setup.bash
     source $CARLA_AUTOWARE_ROOT/../catkin_ws/devel/setup.bash
-    export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-0.9.5-py2.7-linux-x86_64.egg:~/carla-python/carla/
+    export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-<carla-version>-py2.7-linux-x86_64.egg:~/carla-python/carla/
     roslaunch $CARLA_AUTOWARE_ROOT/devel.launch
 
 
@@ -84,7 +84,7 @@ You need two terminals:
 You can run Autoware and Carla on different machines. 
 To let the carla autoware bridge connect to a remote Carla Server, execute roslaunch with the following parameters
 
-    roslaunch host:=<hostname> port:=<port number> carla_autoware_bridge carla_autoware_bridge.launch
+    roslaunch host:=<hostname> port:=<port number> $CARLA_AUTOWARE_ROOT/devel.launch
 
 
 ## Development support
