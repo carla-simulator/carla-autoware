@@ -2,6 +2,15 @@
 <launch>
 
   <!--
+    # vehicle_model #
+    provides the vehicle_model mesh to rviz
+  -->
+  <include file="$(find vehicle_description)/launch/vehicle_model.launch">
+    <arg name="offset_x" default="0.0"/>
+    <arg name="model_path" default="$(find vehicle_description)/urdf/prius.urdf"/>
+  </include>
+
+  <!--
     # can2odom #
     reads the vehicle status and published the odometry on /vehicle/odom (nav_msgs::Odometry)
     In:  /vehicle_status (status of Carla vehicle)
