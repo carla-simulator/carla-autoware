@@ -1,6 +1,8 @@
 # Autoware in Carla
 Integration of AutoWare AV software with the CARLA simulator
 
+![Autoware Runtime Manager Settings](docs/images/autoware-rviz-carla-town01-running.png)
+
 ## Requirements
 
 - ROS kinetic
@@ -56,9 +58,7 @@ has to be initialized ("git submodule update --init") and updated ("git submodul
 To run Autoware within Carla please use the following execution order:
 
 1. Carla Server
-2. Autoware Runtime Manager
-3. Carla Autoware Bridge
-4. Autoware Stack
+2. Autoware (including carla-ros-bridge and additional nodes)
 
 You need two terminals:
 
@@ -71,33 +71,13 @@ You need two terminals:
 
     #Terminal 2
 
-    export CARLA_AUTOWARE_ROOT=~/carla-autoware
+    export CARLA_AUTOWARE_ROOT=~/carla-autoware/autoware_launch
     export CARLA_MAPS_PATH=~/autoware-contents/maps
     source <path-to-autoware>/ros/install/setup.bash
-    source $CARLA_AUTOWARE_ROOT/catkin_ws/devel/setup.bash
+    source $CARLA_AUTOWARE_ROOT/../catkin_ws/devel/setup.bash
     export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-0.9.5-py2.7-linux-x86_64.egg:~/carla-python/carla/
-    
-    #execute Autoware (forks into background)
-    <path-to-autoware>/ros/run
+    roslaunch $CARLA_AUTOWARE_ROOT/devel.launch
 
-    #execute carla-autoware-bridge and carla-autoware-bridge
-    #Option1: execute a headless Carla client
-    roslaunch carla_autoware_bridge carla_autoware_bridge.launch
-    #Option2: including visualization of the ego vehicle and the ability to drive 
-    roslaunch carla_autoware_bridge carla_autoware_bridge_with_manual_control.launch
-
-In Autoware Runtime Manager, select the customized launch files:
-
-![Autoware Runtime Manager Settings](docs/images/autoware-runtime-manager-settings.png)
-
-In Autoware Runtime Manager, start rviz and open the configuration <autoware-dir>/ros/src/.config/rviz/default.rviz
-
-Now you can start the Autoware Stack by starting all launch files from top to bottom. The car should start moving.
-
-![Autoware Runtime Manager Settings](docs/images/autoware-rviz-carla-town01-running.png)
-
-A special camera is positioned behind the car to see the car and its environment.
-You can subscribe to it via ```/carla/ego_vehicle/camera/rgb/viewFromBehind/image_color```.
 
 ### Multi machine setup
 
