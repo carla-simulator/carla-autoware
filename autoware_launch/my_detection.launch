@@ -6,6 +6,7 @@
     @todo: still required?
   -->
   <include file="$(find lidar_euclidean_cluster_detect)/launch/lidar_euclidean_cluster_detect.launch">
+    <arg name="output_frame" value="ego_vehicle/lidar/lidar1" />
   </include>
 
   <!-- 
