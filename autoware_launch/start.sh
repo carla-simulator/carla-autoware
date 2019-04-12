@@ -20,9 +20,6 @@ rospy.spin()
 EOF
 echo "Starting Autoware."
 
-export CARLA_MAPS_PATH=/localdisk/Temp/autoware-contents/maps
-export CARLA_AUTOWARE_ROOT=$TEAM_CODE_ROOT
-source /localdisk/git/Autoware/ros/install/setup.bash
 roslaunch $CARLA_AUTOWARE_ROOT/challenge.launch
 
 exit $?
