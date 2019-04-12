@@ -86,10 +86,16 @@ To let the carla autoware bridge connect to a remote Carla Server, execute rosla
 
     roslaunch host:=<hostname> port:=<port number> $CARLA_AUTOWARE_ROOT/devel.launch
 
+## Ego Vehicle
+
+The setup of the sensors is defined within [sensors.json](catkin_ws/src/carla_autoware_bridge/config/sensors.json).
+
+[carla_ego_vehicle](https://github.com/carla-simulator/ros-bridge/tree/master/carla_ego_vehicle) reads the file and spawn the ego vehicle and the sensors.
+
 
 ## Development support
 
-### Carla Autoware Ego Vehicle
+### Set Start/End of Route
 
 When starting the carla_autoware_bridge a random spawn point and a fixed goal is used to calculate the route.
 
