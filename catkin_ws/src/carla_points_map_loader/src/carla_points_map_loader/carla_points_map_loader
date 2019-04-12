@@ -11,7 +11,7 @@ import threading
 import rospy
 import roslaunch
 
-from carla_ros_bridge_msgs.msg import CarlaMapInfo
+from carla_msgs.msg import CarlaMapInfo
 
 
 class CarlaPointsMapLoader(object):
