@@ -13,6 +13,11 @@
     ##############################
   -->
   <!--
+    # TF remapping #
+  -->
+  <include file="$(find carla_autoware_bridge)/launch/tf.launch"/>
+
+  <!--
     # LIDAR #
     remap carla lidar to autoware.
     @todo: to reduce load, Autoware should directly use the Carla-topic.

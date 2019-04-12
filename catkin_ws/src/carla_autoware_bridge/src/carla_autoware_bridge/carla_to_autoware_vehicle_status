@@ -5,12 +5,12 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 """
-receive carla_ros_bridge::CarlaEgoVehicleStatus and publishes autoware_msgs::VehicleStatus
+receive :CarlaEgoVehicleStatus and publishes autoware_msgs::VehicleStatus
 """
 import math
 import rospy
-from carla_ros_bridge_msgs.msg import CarlaEgoVehicleInfo
-from carla_ros_bridge_msgs.msg import CarlaEgoVehicleStatus
+from carla_msgs.msg import CarlaEgoVehicleInfo
+from carla_msgs.msg import CarlaEgoVehicleStatus
 from autoware_msgs.msg import VehicleStatus
 
 pub = rospy.Publisher('vehicle_status', VehicleStatus, queue_size=1)

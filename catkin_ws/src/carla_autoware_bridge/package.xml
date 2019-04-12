@@ -12,6 +12,7 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>autoware_msgs</exec_depend>
+  <exec_depend>carla_msgs</exec_depend>
   <export>
   </export>
 </package>
