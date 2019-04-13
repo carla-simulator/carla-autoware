@@ -1,17 +1,18 @@
-ARG CARLA_VERSION=0.9.3
+ARG CARLA_VERSION=0.9.5
 
 FROM nvidia/opengl:1.1-glvnd-runtime-ubuntu16.04 as nvidia-opengl
 FROM carlasim/carla:$CARLA_VERSION as carla
 
-FROM autoware/autoware:1.9.1-kinetic
+FROM autoware/autoware:1.11.0-kinetic-cuda
 
+SHELL ["/bin/bash", "-c"]
 ARG CARLA_VERSION
 
 USER root
 RUN apt-get update \
-	&& apt-get install -y python-pip libpng16-16 python-pygame ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
+	&& apt-get install -y python-pip libpng16-16 ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
-RUN pip install simple-pid
+RUN pip install simple-pid pygame networkx==2.2
 
 COPY --from=nvidia-opengl /usr/local/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu
 COPY --from=nvidia-opengl /usr/local/lib/i386-linux-gnu /usr/local/lib/i386-linux-gnu
@@ -27,20 +28,24 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
 ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu:/usr/local/lib/i386-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 
 COPY --from=carla --chown=autoware /home/carla/PythonAPI home/$USERNAME/carla-autoware/PythonAPI
-ENV PYTHONPATH=/home/$USERNAME/carla-autoware/PythonAPI/carla-$CARLA_VERSION-py2.7-linux-x86_64.egg:/home/$USERNAME/carla-autoware/PythonAPI
+ENV PYTHONPATH=/home/$USERNAME/carla-autoware/PythonAPI/carla/dist/carla-$CARLA_VERSION-py2.7-linux-x86_64.egg:/home/$USERNAME/carla-autoware/PythonAPI/carla
 
 USER autoware
 
 RUN cd && mkdir -p /home/$USERNAME/carla-autoware
 COPY --chown=autoware catkin_ws /home/$USERNAME/carla-autoware/catkin_ws
 
-RUN /bin/bash -c 'source /home/$USERNAME/Autoware/ros/devel/setup.bash; cd /home/$USERNAME/carla-autoware/catkin_ws/src; catkin_init_workspace; cd ../; catkin_make -DCMAKE_BUILD_TYPE=Release'
+RUN source /etc/profile.d/ros.sh; source /home/autoware/Autoware/ros/install/local_setup.bash; \
+    cd /home/$USERNAME/carla-autoware/catkin_ws/src; catkin_init_workspace; cd ../; \
+    catkin_make -DCMAKE_BUILD_TYPE=Release
 
 COPY --chown=autoware autoware_data /home/$USERNAME/carla-autoware/autoware_data
 COPY --chown=autoware autoware_launch /home/$USERNAME/carla-autoware/autoware_launch
 COPY --chown=autoware docker/param.yaml /home/$USERNAME/Autoware/ros/src/util/packages/runtime_manager/scripts/param.yaml
 
-ENV CARLA_AUTOWARE_ROOT=/home/$USERNAME/carla-autoware
-
-RUN echo "source /home/$USERNAME/carla-autoware/catkin_ws/devel/setup.bash" >> /home/$USERNAME/.bashrc
-
+RUN echo $'export CARLA_AUTOWARE_ROOT=/home/$USERNAME/carla-autoware/autoware_launch \n\
+           export CARLA_MAPS_PATH=/home/$USERNAME/carla-autoware/autoware_data/maps \n\
+           source /home/$USERNAME/Autoware/ros/install/setup.bash \n\
+           source /home/$USERNAME/carla-autoware/catkin_ws/devel/setup.bash \n' \
+           >> /home/$USERNAME/.bashrc
+RUN echo "export PYTHONPATH=\$PYTHONPATH:${PYTHONPATH}" >> /home/$USERNAME/.bashrc
