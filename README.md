@@ -19,12 +19,6 @@ Integration of AutoWare AV software with the CARLA simulator
 
 Setup/build Autoware as described here: https://github.com/CPFL/Autoware
 
-### Download Point cloud maps
-
-    # Download pointcloud maps for Carla Towns
-    cd ~
-    git clone https://bitbucket.org/carla-simulator/autoware-contents
-
 ### Carla
 
     #download docker image (e.g. version 0.9.5)
@@ -38,14 +32,17 @@ Setup/build Autoware as described here: https://github.com/CPFL/Autoware
 
 ### Carla Autoware Bridge
 
-The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspace (containing all relevant packages).
-The generic Carla ROS bridge (https://github.com/carla-simulator/ros-bridge.git) is included as GIT submodule and 
-has to be initialized ("git submodule update --init") and updated ("git submodule update").
+The Carla Autoware Bridge contains two submodules: the Carla ROS bridge (https://github.com/carla-simulator/ros-bridge.git)
+and point cloud maps for Carla Towns (https://bitbucket.org/carla-simulator/autoware-contents). Clone the repository and 
+initialize the submodules:
 
     cd ~
     git lfs clone https://github.com/carla-simulator/carla-autoware.git
     cd carla-autoware
     git submodule update --init
+
+The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspace (containing all relevant packages).
+
     cd catkin_ws
     catkin_init_workspace src/
     cd src
