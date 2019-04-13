@@ -1,3 +1,6 @@
 [submodule "catkin_ws/src/ros-bridge"]
 	path = catkin_ws/src/ros-bridge
 	url = ../ros-bridge.git
+[submodule "autoware_data"]
+	path = autoware_data
+	url = https://bitbucket.org/carla-simulator/autoware-contents
