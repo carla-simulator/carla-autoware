@@ -22,7 +22,7 @@ These commands will create a "carla-autoware:latest" Docker image.
 ### Run image
 Please consult the main README regarding execution of Carla, the Carla Autoware Bridge and the
 Autoware stack.
-Start Carla server and client as described there (Terminals 1 and 2).
+Start Carla server as described there (Terminal 1 and 2).
 
 The bridge and the Autoware stack have to be executed within the Docker container (the
 Terminal 3 steps).
@@ -32,8 +32,7 @@ Start the container:
    ./run.sh
 
 Within the Docker shell:
-    Autoware/ros/run
-    roslaunch carla_autoware_bridge carla_autoware_bridge.launch
+    roslaunch $CARLA_AUTOWARE_ROOT/devel.launch
 
 Then follow the remaining steps from main README, especially the ones within Autoware Runtime Manager.
 
