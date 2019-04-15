@@ -3,4 +3,5 @@
 	url = ../ros-bridge.git
 [submodule "autoware_data"]
 	path = autoware_data
-	url = https://bitbucket.org/carla-simulator/autoware-contents
+	url = https://bitbucket.org/carla-simulator/autoware-contents.git
+	branch = master
