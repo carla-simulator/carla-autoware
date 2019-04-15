@@ -1,16 +1,19 @@
 ARG CARLA_VERSION=0.9.5
+ARG CARLA_BUILD=''
+
+ARG AUTOWARE_VERSION=1.11.0-kinetic-cuda
 
 FROM nvidia/opengl:1.1-glvnd-runtime-ubuntu16.04 as nvidia-opengl
-FROM carlasim/carla:$CARLA_VERSION as carla
+FROM carlasim/carla:$CARLA_VERSION$CARLA_BUILD as carla
 
-FROM autoware/autoware:1.11.0-kinetic-cuda
+FROM autoware/autoware:$AUTOWARE_VERSION
+ARG CARLA_VERSION
 
 SHELL ["/bin/bash", "-c"]
-ARG CARLA_VERSION
 
 USER root
 RUN apt-get update \
-	&& apt-get install -y python-pip libpng16-16 ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
+	&& apt-get install -y python-pip python-wheel libpng16-16 ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 RUN pip install simple-pid pygame networkx==2.2
 
@@ -49,3 +52,9 @@ RUN echo $'export CARLA_AUTOWARE_ROOT=/home/$USERNAME/carla-autoware/autoware_la
            source /home/$USERNAME/carla-autoware/catkin_ws/devel/setup.bash \n' \
            >> /home/$USERNAME/.bashrc
 RUN echo "export PYTHONPATH=\$PYTHONPATH:${PYTHONPATH}" >> /home/$USERNAME/.bashrc
+
+#replace Autoware entrypoint
+WORKDIR /home/$USERNAME/
+ENTRYPOINT []
+CMD ["/bin/bash"]
+
