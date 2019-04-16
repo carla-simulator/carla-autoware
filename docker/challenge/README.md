@@ -7,16 +7,16 @@ This a a blueprint how to to build a container for the CARLA AD Challenge.
 
 ## Requirements
 
-- Prebuilt CARLA-Autoware Docker image named "carla-autoware:latest"
+- Prebuilt CARLA-Autoware Docker image named "carla-autoware:latest" as described [here](../).
 
 ### Build image
 Select an image name, e.g. "carla-autoware-challenge:latest" as <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME>.
 
 Call within this folder:
 
-   docker build -t <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME> <ADDITIONAL_DOCKER_PARAMETERS>
+    docker build -t <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME> <ADDITIONAL_DOCKER_PARAMETERS>
 
-<ADDITIONAL_DOCKER_PARAMETERS> may be required e.g. when building behind a network proxy.
+<ADDITIONAL_DOCKER_PARAMETERS> may be required e.g. when building behind a network proxy (example: `--build-arg https_proxy --build-arg http_proxy`)
 
 
 ### Run image
@@ -25,14 +25,16 @@ Autoware stack.
 Start a Carla server as described there.
 
 Start the container:
-   docker run -it --rm --net=host <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME>
+
+    docker run -it --rm --net=host <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME>
 
 Within the Docker shell:
+
     /workspace/scenario_runner/srunner/challenge/run_evaluator.sh
 
 or any python call refining the scenario runner execution.
 
-Please consult https://carlachallenge.org/submit/ and
-https://github.com/carla-simulator/scenario_runner/tree/carla_challenge for up-to-date
-instructions.
+For latest instructions please consult:
+* https://carlachallenge.org/submit/
+* https://github.com/carla-simulator/scenario_runner/tree/carla_challenge
 
