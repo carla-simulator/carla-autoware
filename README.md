@@ -69,7 +69,7 @@ You need two terminals:
     #Terminal 2
 
     export CARLA_AUTOWARE_ROOT=~/carla-autoware/autoware_launch
-    export CARLA_MAPS_PATH=~/autoware_data/maps
+    export CARLA_MAPS_PATH=~/carla-autoware/autoware_data/maps
     source <path-to-autoware>/ros/install/setup.bash
     source $CARLA_AUTOWARE_ROOT/../catkin_ws/devel/setup.bash
     export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-<carla-version>-py2.7-linux-x86_64.egg:~/carla-python/carla/
