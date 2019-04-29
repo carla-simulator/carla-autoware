@@ -62,7 +62,7 @@ def twist_to_ackermanndrive():
     rospy.init_node('twist_to_ackermanndrive')
     wheelbase = rospy.get_param('~wheelbase', 3.0)
     rospy.Subscriber("/vehicle_cmd", VehicleCmd, callback, queue_size=1)
-    rospy.Subscriber("/vehicle_control_manual_override", Bool,
+    rospy.Subscriber("/carla/ego_vehicle/vehicle_control_manual_override", Bool,
                      manual_override_callback, queue_size=1)
     rospy.spin()
 
