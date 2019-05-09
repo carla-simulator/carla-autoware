@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build -t carla-autoware -f Dockerfile ./.. "$@"
+docker build --pull -t carla-autoware -f Dockerfile ./.. "$@"

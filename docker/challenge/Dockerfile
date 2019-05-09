@@ -25,10 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy && \
     pip3 install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy
 
-
 WORKDIR /workspace
 COPY --from=carla /home/carla/PythonAPI /workspace/CARLA/PythonAPI
-COPY --from=carla /home/carla/HDMaps /workspace/CARLA/HDMaps
+#COPY --from=carla /home/carla/HDMaps /workspace/CARLA/HDMaps
+RUN mv /home/autoware/carla-autoware/autoware_data/maps /workspace/CARLA/HDMaps
+ENV CARLA_MAPS_PATH /workspace/CARLA/HDMaps
 
 ENV CARLA_ROOT /workspace/CARLA
 
@@ -40,8 +41,6 @@ ENV ROOT_SCENARIO_RUNNER /workspace/scenario_runner
 
 COPY scenario_runner /workspace/scenario_runner
 COPY team_code /workspace/team_code
-
-ENV CARLA_MAPS_PATH /home/autoware/carla-autoware/autoware_data/maps
 
 RUN mkdir -p /workspace/results
 RUN chmod +x /workspace/scenario_runner/srunner/challenge/run_evaluator.sh
@@ -60,9 +59,10 @@ ENV TEAM_CONFIG ''
 ENV TEAM_CODE_ROOT /home/autoware/carla-autoware/autoware_launch/
 ENV CARLA_AUTOWARE_ROOT ${TEAM_CODE_ROOT}
 
-COPY entrypoint.sh /workspace/entrypoint.sh
+COPY entrypoint.sh /workspace/team_code/entrypoint.sh
+COPY .bashrc /root/.bashrc
 
-ENTRYPOINT ["/workspace/entrypoint.sh"]
+#ENTRYPOINT ["/workspace/team_code/entrypoint.sh"]
 CMD ["/bin/bash"]
 
 ########################################################################################################################
