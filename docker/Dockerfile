@@ -12,7 +12,7 @@ ARG CARLA_VERSION
 SHELL ["/bin/bash", "-c"]
 
 USER root
-RUN apt-get update \
+RUN apt-get update && apt-get upgrade -y \
 	&& apt-get install -y python-pip python-wheel libpng16-16 ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 RUN pip install simple-pid pygame networkx==2.2
@@ -34,6 +34,13 @@ COPY --from=carla --chown=autoware /home/carla/PythonAPI home/$USERNAME/carla-au
 ENV PYTHONPATH=/home/$USERNAME/carla-autoware/PythonAPI/carla/dist/carla-$CARLA_VERSION-py2.7-linux-x86_64.egg:/home/$USERNAME/carla-autoware/PythonAPI/carla
 
 USER autoware
+
+#patch and (re-)compile Autoware stack
+COPY --chown=autoware docker/Autoware-eliminate-pcl-warnings.patch /home/$USERNAME/
+RUN patch -p1 -d /home/$USERNAME/Autoware < /home/$USERNAME/Autoware-eliminate-pcl-warnings.patch; \
+                  source /opt/ros/$ROS_DISTRO/setup.bash; \
+                  cd /home/$USERNAME/Autoware/ros; \
+                  ./colcon_release
 
 RUN cd && mkdir -p /home/$USERNAME/carla-autoware
 COPY --chown=autoware catkin_ws /home/$USERNAME/carla-autoware/catkin_ws

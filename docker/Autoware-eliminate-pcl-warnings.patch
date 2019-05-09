@@ -1,0 +1,27 @@
+diff --git a/ros/src/sensing/filters/packages/points_downsampler/nodes/voxel_grid_filter/voxel_grid_filter.cpp b/ros/src/sensing/filters/packages/points_downsampler/nodes/voxel_grid_filter/voxel_grid_filter.cpp
+index 589b0b5..114cfd1 100644
+--- a/ros/src/sensing/filters/packages/points_downsampler/nodes/voxel_grid_filter/voxel_grid_filter.cpp
++++ b/ros/src/sensing/filters/packages/points_downsampler/nodes/voxel_grid_filter/voxel_grid_filter.cpp
+@@ -128,6 +128,8 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
+ 
+ int main(int argc, char** argv)
+ {
++  pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
++
+   ros::init(argc, argv, "voxel_grid_filter");
+ 
+   ros::NodeHandle nh;
+diff --git a/ros/src/sensing/filters/packages/points_preprocessor/nodes/ray_ground_filter/ray_ground_filter.cpp b/ros/src/sensing/filters/packages/points_preprocessor/nodes/ray_ground_filter/ray_ground_filter.cpp
+index 3bca79e..705de94 100644
+--- a/ros/src/sensing/filters/packages/points_preprocessor/nodes/ray_ground_filter/ray_ground_filter.cpp
++++ b/ros/src/sensing/filters/packages/points_preprocessor/nodes/ray_ground_filter/ray_ground_filter.cpp
+@@ -343,6 +343,9 @@ void RayGroundFilter::Run()
+   //HDL-32  |     0.1-0.4    |     1.33     |  -30.67<=x<=10.67 (41.33 / 0.72)
+   //VLP-16  |     0.1-0.4    |     2.0      |  -15.0<=x<=15.0   (30    / 0.52)
+   //VLP-16HD|     0.1-0.4    |     1.33     |  -10.0<=x<=10.0   (20    / 0.35)
++
++  pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
++
+   ROS_INFO("Initializing Ground Filter, please wait...");
+   node_handle_.param<std::string>("input_point_topic", input_point_topic_, "/points_raw");
+   ROS_INFO("Input point_topic: %s", input_point_topic_.c_str());
