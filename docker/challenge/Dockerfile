@@ -22,8 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-pip && \
         rm -rf /var/lib/apt/lists/*
 
-RUN pip install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy=1.2.1 && \
-    pip3 install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy=1.2.1
+RUN pip install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy==1.2.1 && \
+    pip3 install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy==1.2.1
 
 WORKDIR /workspace
 COPY --from=carla /home/carla/PythonAPI /workspace/CARLA/PythonAPI
