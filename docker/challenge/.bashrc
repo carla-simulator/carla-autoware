@@ -5,6 +5,8 @@
 echo "#################### /root/.bashrc ####################"
 echo "--- sourcing setup script"
 source /home/autoware/carla-autoware/catkin_ws/devel/setup.bash
+echo "--- setting PYTHONPATH"
+export PYTHONPATH=/workspace/CARLA/PythonAPI/carla/dist/carla-0.9.5-py2.7-linux-x86_64.egg:/workspace/CARLA/PythonAPI/carla:$PYTHONPATH
 echo "--- launching roscore"
 /opt/ros/kinetic/bin/roscore &
 

@@ -22,8 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-pip && \
         rm -rf /var/lib/apt/lists/*
 
-RUN pip install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy && \
-    pip3 install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy
+RUN pip install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy=1.2.1 && \
+    pip3 install py_trees==0.8.3 shapely six numpy networkx==2.2 scipy=1.2.1
 
 WORKDIR /workspace
 COPY --from=carla /home/carla/PythonAPI /workspace/CARLA/PythonAPI
@@ -32,10 +32,6 @@ RUN mv /home/autoware/carla-autoware/autoware_data/maps /workspace/CARLA/HDMaps
 ENV CARLA_MAPS_PATH /workspace/CARLA/HDMaps
 
 ENV CARLA_ROOT /workspace/CARLA
-
-# installing CARLA eggs
-RUN /usr/bin/easy_install CARLA/PythonAPI/carla/dist/*-py2.7-linux-x86_64.egg
-RUN easy_install-3.5 CARLA/PythonAPI/carla/dist/*-py3.5-linux-x86_64.egg
 
 ENV ROOT_SCENARIO_RUNNER /workspace/scenario_runner
 
