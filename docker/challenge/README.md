@@ -14,7 +14,7 @@ Select an image name, e.g. "carla-autoware-challenge:latest" as <CARLA_AUTOWARE_
 
 Call within this folder:
 
-    docker build -t <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME> <ADDITIONAL_DOCKER_PARAMETERS>
+    docker build . -t <CARLA_AUTOWARE_CHALLENGE_IMAGE_NAME> <ADDITIONAL_DOCKER_PARAMETERS>
 
 <ADDITIONAL_DOCKER_PARAMETERS> may be required e.g. when building behind a network proxy (example: `--build-arg https_proxy --build-arg http_proxy`)
 
