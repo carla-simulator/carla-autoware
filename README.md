@@ -36,6 +36,8 @@ The Carla Autoware Bridge contains two submodules: the Carla ROS bridge (https:/
 and point cloud maps for Carla Towns (https://bitbucket.org/carla-simulator/autoware-contents). Clone the repository and 
 initialize the submodules:
 
+[Warning]: Make sure you have git lfs(Large File System) installed. To install git lfs, please go to [git lfs documentation](https://github.com/git-lfs/git-lfs/wiki/Installation)
+
     cd ~
     git lfs clone https://github.com/carla-simulator/carla-autoware.git
     cd carla-autoware
