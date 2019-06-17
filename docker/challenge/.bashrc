@@ -3,6 +3,8 @@
 # for examples
 
 echo "#################### /root/.bashrc ####################"
+echo "--- set ulimits"
+ulimit -c 0
 echo "--- sourcing setup script"
 source /home/autoware/carla-autoware/catkin_ws/devel/setup.bash
 echo "--- setting PYTHONPATH"
