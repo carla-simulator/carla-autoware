@@ -45,9 +45,7 @@ The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspa
 
     cd catkin_ws
     catkin_init_workspace src/
-    cd src
-    ln -s <path-to-autoware>/ros/src/msgs/autoware_msgs
-    cd ..
+    source <path-to-autoware>/ros/install/setup.bash
     catkin_make
 
 ## Run
@@ -70,7 +68,6 @@ You need two terminals:
 
     export CARLA_AUTOWARE_ROOT=~/carla-autoware/autoware_launch
     export CARLA_MAPS_PATH=~/carla-autoware/autoware_data/maps
-    source <path-to-autoware>/ros/install/setup.bash
     source $CARLA_AUTOWARE_ROOT/../catkin_ws/devel/setup.bash
     export PYTHONPATH=$PYTHONPATH:~/carla-python/carla/dist/carla-<carla-version>-py2.7-linux-x86_64.egg:~/carla-python/carla/
     roslaunch $CARLA_AUTOWARE_ROOT/devel.launch
