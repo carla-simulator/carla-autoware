@@ -12,6 +12,7 @@ ARG CARLA_VERSION
 SHELL ["/bin/bash", "-c"]
 
 USER root
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 RUN apt-get update && apt-get upgrade -y \
 	&& apt-get install -y python-pip python-wheel libpng16-16 ros-kinetic-ackermann-msgs ros-kinetic-derived-object-msgs --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
