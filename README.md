@@ -6,7 +6,8 @@ Integration of AutoWare AV software with the CARLA simulator
 ## Requirements
 
 - ROS kinetic
-- Autoware (tested with 1.11.0)
+- Autoware (tested with 1.12.0)
+- CARLA 0.9.6
 
 ## Opens
 
@@ -21,7 +22,7 @@ Setup/build Autoware as described here: https://github.com/CPFL/Autoware
 
 ### Carla
 
-    #download docker image (e.g. version 0.9.5)
+    #download docker image (e.g. version 0.9.6)
     docker pull carlasim/carla:<carla-version>
 
     #extract the Carla Python API from the image
