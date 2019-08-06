@@ -11,7 +11,7 @@ import threading
 import rospy
 import roslaunch
 
-from carla_msgs.msg import CarlaMapInfo
+from carla_msgs.msg import CarlaWorldInfo
 
 
 class CarlaPointsMapLoader(object):
@@ -19,7 +19,7 @@ class CarlaPointsMapLoader(object):
     start stop the points map loader if a new map is received
     """
 
-    def map_callback(self, data):
+    def world_info_callback(self, data):
         """
         callback when a new map is set
         """
@@ -40,7 +40,7 @@ class CarlaPointsMapLoader(object):
         self.process = None
         self.launch = None
         roslaunch.configure_logging(self.uuid)
-        rospy.Subscriber("/carla/map", CarlaMapInfo, self.map_callback)
+        rospy.Subscriber("/carla/world_info", CarlaWorldInfo, self.world_info_callback)
 
     def run(self):
         """
