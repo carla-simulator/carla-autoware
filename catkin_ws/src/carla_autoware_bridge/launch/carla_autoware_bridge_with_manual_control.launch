@@ -2,6 +2,7 @@
 <launch>
   <arg name='host' default='localhost'/>
   <arg name='port' default='2000'/>
+  <arg name='town' default=''/>
 
   <!-- carla ros manual control -->
   <include file="$(find carla_manual_control)/launch/carla_manual_control.launch" />
@@ -10,6 +11,7 @@
   <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch">
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
+    <arg name='town' value='$(arg town)'/>
   </include>
 
 </launch>
