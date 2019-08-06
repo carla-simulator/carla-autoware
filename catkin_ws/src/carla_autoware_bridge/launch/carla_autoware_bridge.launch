@@ -2,6 +2,7 @@
 <launch>
   <arg name='host' default='localhost'/>
   <arg name='port' default='2000'/>
+  <arg name='town' default=''/>
   <arg name="vehicle_filter" default='vehicle.toyota.prius*' />
   <arg name="sensor_definition_file" default='$(find carla_autoware_bridge)/config/sensors.json'/>
 
@@ -14,6 +15,7 @@
   <include file="$(find carla_ros_bridge)/launch/carla_ros_bridge.launch">
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
+    <arg name='town' value='$(arg town)'/>
   </include>
 
   <!-- carla autoware ego vehicle -->
