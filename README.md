@@ -109,6 +109,17 @@ Press `B` to be able to steer the ego vehicle within ROS manual control.
 
 Internally, this is done by stopping the conversion from the Autoware control message to AckermannDrive within the node `vehiclecmd_to_ackermanndrive`. The relevant ros-topic is `/vehicle_control_manual_override`.
 
+#### Use Carla Ground Truth Objects
+
+You can skip the Autoware perception by using the ground truth objects from CARLA.
+Therefore disable all relevant Autware perception nodes and execute:
+
+```
+rosrun carla_autoware_bridge carla_to_autoware_detected_objects
+```
+
+The objects get then published to `/tracked_objects`.
+
 ## Design
 
 The bridge contains three Carla Clients.
