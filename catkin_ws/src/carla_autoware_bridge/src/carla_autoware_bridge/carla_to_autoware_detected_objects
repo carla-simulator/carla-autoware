@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019 Intel Corporation
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+"""
+convert detected objects to autoware
+"""
+import rospy
+from autoware_msgs.msg import DetectedObjectArray, DetectedObject
+from derived_object_msgs.msg import ObjectArray
+
+pub = rospy.Publisher('/tracked_objects', DetectedObjectArray, queue_size=1)
+
+
+def callback(data):
+    """
+    callback for current objects
+    """
+    objects_msg = DetectedObjectArray()
+    objects_msg.header = data.header
+    for obj in data.objects:
+        object_msg = DetectedObject()
+        object_msg.header = obj.header
+        object_msg.id = obj.id
+        object_msg.score = 1
+        object_msg.valid = True
+        object_msg.space_frame = "map"
+        object_msg.pose = obj.pose
+        object_msg.dimensions.x = obj.shape.dimensions[0]
+        object_msg.dimensions.y = obj.shape.dimensions[1]
+        object_msg.dimensions.z = obj.shape.dimensions[2]
+        object_msg.velocity = obj.twist
+        object_msg.acceleration = obj.accel
+        object_msg.convex_hull.polygon = obj.polygon
+        object_msg.pose_reliable = True
+        object_msg.velocity_reliable = True
+        object_msg.acceleration_reliable = True
+        
+        objects_msg.objects.append(object_msg)
+    if not rospy.is_shutdown():
+        pub.publish(objects_msg)
+
+
+def convert_objects():
+    """
+    main loop
+    """
+    rospy.init_node('convert_objects', anonymous=True)
+    rospy.Subscriber("/carla/ego_vehicle/objects", ObjectArray, callback)
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    convert_objects()

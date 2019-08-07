@@ -18,6 +18,7 @@ catkin_install_python(PROGRAMS
     src/carla_autoware_bridge/carla_to_autoware_waypoints
     src/carla_autoware_bridge/odometry_to_posestamped
     src/carla_autoware_bridge/vehiclecmd_to_ackermanndrive
+    src/carla_autoware_bridge/carla_to_autoware_detected_objects
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
