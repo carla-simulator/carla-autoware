@@ -47,7 +47,7 @@ initialize the submodules:
 The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspace (containing all relevant packages).
 
     cd catkin_ws
-    source <path-to-autoware>/ros/install/setup.bash
+    source <path-to-autoware>/install/setup.bash
     catkin_init_workspace src/
     catkin_make
 
