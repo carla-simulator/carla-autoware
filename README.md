@@ -69,7 +69,7 @@ You need two terminals:
 
     #execute Carla
     #For details, please refer to the CARLA documentation
-    nvidia-docker run -p 2000-2001:2000-2001 -it --rm carlasim/carla:<carla-version> ./CarlaUE4.sh /Game/Carla/Maps/Town01 -benchmark -carla-server -fps=20
+    nvidia-docker run -p 2000-2001:2000-2001 -it --rm carlasim/carla:<carla-version> ./CarlaUE4.sh
 
 
     #Terminal 2
@@ -137,5 +137,12 @@ The bridge contains three Carla Clients.
 
 ## Scenario Execution
 
-It is possible to use CARLA scenario runner in conjunction with autoware: [Documentation](scenario).
+It is possible to use CARLA scenario runner in conjunction with autoware: [Documentation](docs/use_scenario_runner.md).
 
+## Troubleshooting
+
+### Autoware fails if started shortly after changing the Town.
+
+There is a [bug](https://gitlab.com/autowarefoundation/autoware.ai/common/issues/1) within Autoware that leads to errors if the simulation time is below 5 seconds (e.g. ray_ground_filter and ndt_matching die)
+The simulation time is reset whenever you change the CARLA town (e.g by executing carla_ros_bridge with argument `town:=Town01`).
+As a workaround execute ros-bridge once to change the town (`roslaunch carla_ros_bridge carla_ros_bridge.launch town:=Town01`), kill it and wait 5 seconds before subsequent launches.
