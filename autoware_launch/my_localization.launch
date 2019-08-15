@@ -1,5 +1,6 @@
 <!-- -->
 <launch>
+  <arg name='role_name' default='ego_vehicle'/>
 
   <!--
     # vehicle_model #
@@ -20,12 +21,12 @@
 
   <!--
     # GNSS #
-    Carla is reporting a gps fix on topic /carla/ego_vehicle/gnss/front/gnss
+    Carla is reporting a gps fix on topic /carla/<role_name>/gnss/front/gnss
     This can be used as Autoware pose provider. The resulting pose is published on /gnss_pose
     @todo This is currently disabled. Instead the carla_autoware_bridge publishes a ground-truth /gnss_pose
   -->
   <!--
-  <node pkg="topic_tools" type="relay" name="gnss_relay" args="/carla/ego_vehicle/gnss/gnss1/fix /fix"/> 
+  <node pkg="topic_tools" type="relay" name="gnss_relay" args="/carla/$(arg role_name)/gnss/gnss1/fix /fix"/> 
   <include file="$(find gnss_localizer)/launch/fix2tfpose.launch"/>
   -->
 

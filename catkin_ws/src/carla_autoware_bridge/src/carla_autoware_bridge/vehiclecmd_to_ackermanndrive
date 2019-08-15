@@ -14,7 +14,7 @@ from ackermann_msgs.msg import AckermannDrive
 from autoware_msgs.msg import VehicleCmd
 from std_msgs.msg import Bool
 
-pub = rospy.Publisher("/carla/ego_vehicle/ackermann_cmd", AckermannDrive, queue_size=1)
+pub = None
 wheelbase = 3.0
 
 
@@ -43,8 +43,11 @@ def twist_to_ackermanndrive():
     """
     mainloop
     """
+    global pub
     rospy.init_node('twist_to_ackermanndrive')
     wheelbase = rospy.get_param('~wheelbase', 3.0)
+    role_name = rospy.get_param("/role_name", "ego_vehicle")
+    pub = rospy.Publisher("/carla/{}/ackermann_cmd".format(role_name), AckermannDrive, queue_size=1)
     rospy.Subscriber("/vehicle_cmd", VehicleCmd, callback, queue_size=1)
     rospy.spin()
 

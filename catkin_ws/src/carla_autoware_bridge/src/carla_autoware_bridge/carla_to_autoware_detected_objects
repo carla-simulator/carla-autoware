@@ -48,7 +48,8 @@ def convert_objects():
     main loop
     """
     rospy.init_node('convert_objects', anonymous=True)
-    rospy.Subscriber("/carla/ego_vehicle/objects", ObjectArray, callback)
+    role_name = rospy.get_param("/role_name", "ego_vehicle")
+    rospy.Subscriber("/carla/{}/objects".format(role_name), ObjectArray, callback)
     rospy.spin()
 
 
