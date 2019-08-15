@@ -135,3 +135,7 @@ The bridge contains three Carla Clients.
 
 ![Design Overview](docs/images/design.png)
 
+## Scenario Execution
+
+It is possible to use CARLA scenario runner in conjunction with autoware: [Documentation](scenario).
+
