@@ -6,6 +6,8 @@
   <arg name="vehicle_filter" default='vehicle.toyota.prius*' />
   <arg name="sensor_definition_file" default='$(find carla_autoware_bridge)/config/sensors.json'/>
   <arg name='role_name' default='ego_vehicle'/>
+  <!-- use comma separated format "x,y,z,roll,pitch,yaw" -->
+  <arg name='spawn_point' default=''/>
 
   <!--
     #################
@@ -26,6 +28,7 @@
     <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
     <arg name="sensor_definition_file" value='$(arg sensor_definition_file)'/>
     <arg name='role_name' value='$(arg role_name)'/>
+    <arg name='spawn_point' value='$(arg spawn_point)'/>
   </include>
 
   <!-- mission planning -->

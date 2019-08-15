@@ -4,6 +4,8 @@
   <arg name='port' default='2000'/>
   <arg name='town' default=''/>
   <arg name='role_name' default='ego_vehicle'/>
+  <!-- use comma separated format "x,y,z,roll,pitch,yaw" -->
+  <arg name='spawn_point' default=''/>
 
   <!-- carla ros manual control -->
   <include file="$(find carla_manual_control)/launch/carla_manual_control.launch">
@@ -16,6 +18,7 @@
     <arg name='port' value='$(arg port)'/>
     <arg name='town' value='$(arg town)'/>
     <arg name='role_name' value='$(arg role_name)'/>
+    <arg name='spawn_point' value='$(arg spawn_point)'/>
   </include>
 
 </launch>
