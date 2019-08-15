@@ -49,6 +49,11 @@ The Carla Autoware Bridge is a ROS package. Therefore we create a catkin workspa
     cd catkin_ws
     source <path-to-autoware>/install/setup.bash
     catkin_init_workspace src/
+
+    # install dependencies
+    rosdep update
+    rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+
     catkin_make
 
 ## Run
