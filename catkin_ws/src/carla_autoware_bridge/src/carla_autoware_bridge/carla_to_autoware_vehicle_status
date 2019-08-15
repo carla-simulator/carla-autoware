@@ -59,9 +59,10 @@ def convert_status_carla_to_autoware():
     main loop
     """
     rospy.init_node('convert_status_carla_to_autoware', anonymous=True)
-    rospy.Subscriber("/carla/ego_vehicle/vehicle_status",
+    role_name = rospy.get_param("/role_name", "ego_vehicle")
+    rospy.Subscriber("/carla/{}/vehicle_status".format(role_name),
                      CarlaEgoVehicleStatus, vehicle_status_callback)
-    rospy.Subscriber("/carla/ego_vehicle/vehicle_info", CarlaEgoVehicleInfo, vehicle_info_callback)
+    rospy.Subscriber("/carla/{}/vehicle_info".format(role_name), CarlaEgoVehicleInfo, vehicle_info_callback)
     rospy.spin()
 
 

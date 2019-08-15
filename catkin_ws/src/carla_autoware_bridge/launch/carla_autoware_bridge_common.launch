@@ -1,10 +1,12 @@
 <!-- -->
 <launch>
   <arg name="wheelbase" default="2.7" /> <!-- distance between front and back axle in meters -->
+  <arg name='role_name' default='ego_vehicle'/>
 
   <param name="/vehicle_info/wheel_base" type="double" value="$(arg wheelbase)" />
   <param name="/vehicle_info/minimum_turning_radius" type="double" value="5" />
   <param name="/vehicle_info/maximum_steering_angle" type="double" value="70" />
+  <param name="/role_name" type="string" value="$(arg role_name)" />
 
 
   <!--
@@ -15,21 +17,23 @@
   <!--
     # TF remapping #
   -->
-  <include file="$(find carla_autoware_bridge)/launch/tf.launch"/>
+  <include file="$(find carla_autoware_bridge)/launch/tf.launch">
+    <arg name='role_name' value='$(arg role_name)'/>
+  </include>
 
   <!--
     # LIDAR #
     remap carla lidar to autoware.
     @todo: to reduce load, Autoware should directly use the Carla-topic.
   -->
-  <node pkg="topic_tools" type="relay" name="points_relay" args="/carla/ego_vehicle/lidar/lidar1/point_cloud /points_raw"/>
+  <node pkg="topic_tools" type="relay" name="points_relay" args="/carla/$(arg role_name)/lidar/lidar1/point_cloud /points_raw"/>
 
   <!-- 
     # CAMERA #
     remap carla front camera to autoware
     @todo: to reduce load, Autoware should directly use the Carla-topic.
   -->
-  <node pkg="topic_tools" type="relay" name="imag_relay" args="/carla/ego_vehicle/camera/rgb/front/image_color /image_raw"/>
+  <node pkg="topic_tools" type="relay" name="imag_relay" args="/carla/$(arg role_name)/camera/rgb/front/image_color /image_raw"/>
 
   <!-- 
     # GNSS #
@@ -53,7 +57,9 @@
     # ACTUATOR #
     convert ackermann control to carla vehicle control (with PID controller)
   -->
-  <include file="$(find carla_ackermann_control)/launch/carla_ackermann_control.launch"/>
+  <include file="$(find carla_ackermann_control)/launch/carla_ackermann_control.launch">
+    <arg name='role_name' value='$(arg role_name)'/>
+  </include>
 
 </launch>
 

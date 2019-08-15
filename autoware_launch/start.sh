@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# it is assumed, that CARLA is already running
+
+
 #there is a bug in Autoware, that prevents the stack from starting with very low timestamps
 #https://github.com/autowarefoundation/autoware/issues/2200
 #

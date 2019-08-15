@@ -5,6 +5,7 @@
   <arg name='town' default=''/>
   <arg name="vehicle_filter" default='vehicle.toyota.prius*' />
   <arg name="sensor_definition_file" default='$(find carla_autoware_bridge)/config/sensors.json'/>
+  <arg name='role_name' default='ego_vehicle'/>
 
   <!--
     #################
@@ -23,13 +24,15 @@
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
     <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
-  <arg name="sensor_definition_file" default='$(arg sensor_definition_file)'/>
+    <arg name="sensor_definition_file" value='$(arg sensor_definition_file)'/>
+    <arg name='role_name' value='$(arg role_name)'/>
   </include>
 
   <!-- mission planning -->
   <include file="$(find carla_waypoint_publisher)/launch/carla_waypoint_publisher.launch" >
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
+    <arg name="role_name" value='$(arg role_name)'/>
   </include>
 
   <!--
@@ -44,6 +47,8 @@
     # ROS remapping + conversion #
     ##############################
   -->
-  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_common.launch"/>
+  <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_common.launch">
+    <arg name="role_name" value='$(arg role_name)'/>
+  </include>
 </launch>
 

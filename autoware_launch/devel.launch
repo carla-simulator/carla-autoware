@@ -3,14 +3,18 @@
   <arg name='host' default='localhost'/>
   <arg name='port' default='2000'/>
   <arg name='town' default=''/>
+  <arg name='role_name' default='hero'/>
 
   <include file="$(find carla_autoware_bridge)/launch/carla_autoware_bridge_with_manual_control.launch">
     <arg name='host' value='$(arg host)'/>
     <arg name='port' value='$(arg port)'/>
     <arg name='town' value='$(arg town)'/>
+    <arg name='role_name' value='$(arg role_name)'/>
   </include>
 
-  <include file="$(env CARLA_AUTOWARE_ROOT)/autoware.launch"/>
+  <include file="$(env CARLA_AUTOWARE_ROOT)/autoware.launch">
+    <arg name='role_name' value='$(arg role_name)'/>
+  </include>
 
 </launch>
 
