@@ -1,7 +1,7 @@
 ARG CARLA_VERSION=0.9.6
 ARG CARLA_BUILD=''
 
-ARG AUTOWARE_VERSION=1.11.0-kinetic-cuda
+ARG AUTOWARE_VERSION=1.12.0-kinetic-cuda
 
 FROM nvidia/opengl:1.1-glvnd-runtime-ubuntu16.04 as nvidia-opengl
 FROM carlasim/carla:$CARLA_VERSION$CARLA_BUILD as carla
@@ -36,17 +36,17 @@ ENV PYTHONPATH=/home/$USERNAME/carla-autoware/PythonAPI/carla/dist/carla-$CARLA_
 
 USER autoware
 
-#patch and (re-)compile Autoware stack
-COPY --chown=autoware docker/Autoware-eliminate-pcl-warnings.patch /home/$USERNAME/
-RUN patch -p1 -d /home/$USERNAME/Autoware < /home/$USERNAME/Autoware-eliminate-pcl-warnings.patch; \
-                  source /opt/ros/$ROS_DISTRO/setup.bash; \
-                  cd /home/$USERNAME/Autoware/ros; \
-                  ./colcon_release
+##patch and (re-)compile Autoware stack
+#COPY --chown=autoware docker/Autoware-eliminate-pcl-warnings.patch /home/$USERNAME/
+#RUN patch -p1 -d /home/$USERNAME/Autoware < /home/$USERNAME/Autoware-eliminate-pcl-warnings.patch; \
+#                  source /opt/ros/$ROS_DISTRO/setup.bash; \
+#                  cd /home/$USERNAME/Autoware/ros; \
+#                  ./colcon_release
 
 RUN cd && mkdir -p /home/$USERNAME/carla-autoware
 COPY --chown=autoware catkin_ws /home/$USERNAME/carla-autoware/catkin_ws
 
-RUN source /etc/profile.d/ros.sh; source /home/autoware/Autoware/ros/install/local_setup.bash; \
+RUN source /etc/profile.d/ros.sh; source /home/autoware/Autoware/install/local_setup.bash; \
     cd /home/$USERNAME/carla-autoware/catkin_ws/src; catkin_init_workspace; cd ../; \
     catkin_make -DCMAKE_BUILD_TYPE=Release
 
@@ -56,7 +56,7 @@ COPY --chown=autoware docker/param.yaml /home/$USERNAME/Autoware/ros/src/util/pa
 
 RUN echo $'export CARLA_AUTOWARE_ROOT=/home/$USERNAME/carla-autoware/autoware_launch \n\
            export CARLA_MAPS_PATH=/home/$USERNAME/carla-autoware/autoware_data/maps \n\
-           source /home/$USERNAME/Autoware/ros/install/setup.bash \n\
+           source /home/$USERNAME/Autoware/install/setup.bash \n\
            source /home/$USERNAME/carla-autoware/catkin_ws/devel/setup.bash \n' \
            >> /home/$USERNAME/.bashrc
 RUN echo "export PYTHONPATH=\$PYTHONPATH:${PYTHONPATH}" >> /home/$USERNAME/.bashrc
