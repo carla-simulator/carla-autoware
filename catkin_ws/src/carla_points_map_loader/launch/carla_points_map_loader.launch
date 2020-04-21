@@ -1,9 +1,0 @@
-<!-- -->
-<launch>
-  <arg name='maps_path' default='$(env CARLA_MAPS_PATH)'/>
-
-  <param name="/carla/maps_path" value="$(arg maps_path)" />
-
-  <node pkg="carla_points_map_loader" type="carla_points_map_loader" name="carla_points_map_loader" output="screen"/>
-</launch>
-
