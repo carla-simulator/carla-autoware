@@ -14,7 +14,7 @@
   <!-- use comma separated format "x,y,z,roll,pìtch,yaw" -->
   <arg name='spawn_point' default=''/>
 
-  <arg name='sensor_definition_file' default='$(find carla_autoware_bridge)/$(arg agent)/config/sensors.json'/>
+  <arg name='sensor_definition_file' default='$(find carla_autoware_agent)/$(arg agent)/config/sensors.json'/>
 
   <!-- vehicle info -->
   <arg name='vehicle_model' default='vehicle.toyota.prius'/>
@@ -47,7 +47,7 @@
     ## Agent bridge ##
     ##################
   -->
-  <include file='$(find carla_autoware_bridge)/$(arg agent)/bridge.launch'>
+  <include file='$(find carla_autoware_agent)/$(arg agent)/bridge.launch'>
     <arg name='role_name' value='$(arg role_name)'/>
     <arg name='wheelbase' value='$(arg vehicle_wheelbase)'/>
   </include>
@@ -57,7 +57,7 @@
     ## Autoware agent ## 
     ####################
   -->
-  <include file='$(find carla_autoware_bridge)/$(arg agent)/my_agent.launch'>
+  <include file='$(find carla_autoware_agent)/$(arg agent)/my_agent.launch'>
     <arg name='town' value='$(arg town)'/>
     <arg name='vehicle_length' value='$(arg vehicle_length)'/>
     <arg name='vehicle_width' value='$(arg vehicle_width)'/>
@@ -71,8 +71,8 @@
     ## Visualization ## 
     ###################
   -->
-  <arg name='rvizconfig' default='$(find carla_autoware_bridge)/$(arg agent)/rviz/config.rviz'/>
-  <!--<arg name='rvizconfig' default='$(find carla_autoware_bridge)/$(arg agent)/rviz/record.rviz'/>-->
+  <arg name='rvizconfig' default='$(find carla_autoware_agent)/$(arg agent)/rviz/config.rviz'/>
+  <!--<arg name='rvizconfig' default='$(find carla_autoware_agent)/$(arg agent)/rviz/record.rviz'/>-->
   <node name='rviz' pkg='rviz' type='rviz' args='-d $(arg rvizconfig)'/>
 
 </launch>

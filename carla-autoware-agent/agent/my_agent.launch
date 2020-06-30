@@ -22,14 +22,14 @@
     # map #
     @todo this launch file should be removed! Automatically detection by the bride
   -->
-  <include file='$(find carla_autoware_bridge)/agent/launch/my_map.launch'>
+  <include file='$(find carla_autoware_agent)/agent/launch/my_map.launch'>
     <arg name='town' value='$(arg town)'/>
   </include>
 
   <!-- 
     # sensing #
   -->
-  <include file='$(find carla_autoware_bridge)/agent/launch/my_sensing.launch'>
+  <include file='$(find carla_autoware_agent)/agent/launch/my_sensing.launch'>
   </include>
 
   <!-- 
@@ -42,7 +42,7 @@
   </group>
 
   <group unless='$(arg use_ground_truth_localization)'>
-    <include file='$(find carla_autoware_bridge)/agent/launch/my_localization.launch'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_localization.launch'>
     </include>
   </group>
 
@@ -55,7 +55,7 @@
   </group>
 
   <group unless='$(arg use_ground_truth_detections)'>
-    <include file='$(find carla_autoware_bridge)/agent/launch/my_detection.launch'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_detection.launch'>
     </include>
   </group>
 
@@ -63,13 +63,13 @@
     <!-- 
       # mission planning #
     -->
-    <include file='$(find carla_autoware_bridge)/agent/launch/my_mission_planning.launch'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_mission_planning.launch'>
     </include>
 
     <!-- 
       # motion planning #
     -->
-    <include file='$(find carla_autoware_bridge)/agent/launch/my_motion_planning.launch'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_motion_planning.launch'>
     </include>
   </group>
 
