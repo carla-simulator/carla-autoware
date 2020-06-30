@@ -1,0 +1,99 @@
+<launch>
+
+  <!--
+    # vel_pose_connect #
+    the vehicle status is read and a can_velocity (geometry_msgs::TwistStamped) is calculated (by can_status_translator)
+    In:  /vehicle_status
+    In:  /can_info
+    Out: /linear_velocity_viz (visualization of velocity)
+    Out: /can_velocity
+  -->
+  <include file='$(find autoware_connector)/launch/vel_pose_connect.launch'>
+    <arg name='topic_pose_stamped' value='/ndt_pose' />
+    <arg name='topic_twist_stamped' value='/estimate_twist' />
+  </include>
+
+  <!-- 
+    # decision_maker #
+  -->
+  <include file='$(find decision_maker)/launch/decision_maker.launch'>
+    <arg name='auto_engage' value='true' />
+    <arg name='disuse_vector_map' value='true'/>
+  </include>
+
+  <!--
+    # op_global_planner #
+    In:  /initialpose [geometry_msgs::PoseWithCovarianceStamped]
+    In:  /move_base_simple/goal [geometry_msgs::PoseStamped]
+    In:  /current_pose [geometry_msgs::PoseStamped]
+    In:  /current_velocity [geometry_msgs::TwistStamped]
+    In:  /vector_map_info/* [vector_map_msgs::*]
+    Out: /lane_waypoints_array [autoware_msgs::LaneArray]
+    Out: /global_waypoints_rviz [visualization_msgs::MarkerArray]
+    Out: /op_destinations_rviz [visualization_msgs::MarkerArray]
+    Out: /vector_map_center_lines_rviz [visualization_msgs::MarkerArray]
+  -->
+  <group>
+    <remap from='/lane_waypoints_array' to='/based/lane_waypoints_raw'/>
+    <include file='$(find op_global_planner)/launch/op_global_planner.launch'>
+      <arg name='pathDensity' value='0.75' /> 
+      <arg name='enableSmoothing' value='true' /> 
+      <arg name='enableLaneChange' value='false' />
+      <arg name='enableRvizInput' value='true' />
+      <arg name='enableReplan' value='true' />
+      <arg name='velocitySource' value='1' />
+      <arg name='mapSource' value='0'/>
+    </include>
+  </group>
+
+  <!-- 
+    # waypoint replanner #
+    to reduce velocity on curves
+    Out:  /based/lane_waypoints_array [autoware_msgs::LaneArray]
+    In:   /based/lane_waypoints_raw [autoware_msgs::LaneArray]
+  -->
+  <node pkg='rostopic' type='rostopic' name='config_waypoint_replanner_topic'
+        args='pub -l /config/waypoint_replanner autoware_config_msgs/ConfigWaypointReplanner
+        "{ replanning_mode: true, use_decision_maker: true, velocity_max: 20.0,
+           velocity_min: 0.0, accel_limit: 3.00, decel_limit: 3.00, radius_thresh: 20.0, radius_min: 0.0,
+           resample_mode: true, resample_interval: 1.0, velocity_offset: 4, end_point_offset: 0,
+           braking_distance: 0, replan_curve_mode: true, replan_endpoint_mode: false, overwrite_vmax_mode: false,
+           realtime_tuning_mode: false}"' />
+
+  <node pkg='waypoint_maker' type='waypoint_replanner' name='waypoint_replanner'>
+    <param name='use_decision_maker' value='true'/>
+  </node>
+
+  <!--
+    # lane_rule #
+    In:  /lane_waypoints_array [autoware_msgs::LaneArray]
+    In:  /vector_map_info/* [vector_map_msgs::*]
+    Out: /traffic_waypoints_array [autoware_msgs::LaneArray]
+    Out: /green_waypoints_array [autoware_msgs::LaneArray]
+    Out: /red_waypoints_array [autoware_msgs::LaneArray]
+  -->
+  <node pkg='lane_planner' type='lane_rule' name='lane_rule' />
+
+  <!--
+    # lane_stop #
+    In:  /green_waypoints_array [autoware_msgs::LaneArray]
+    In:  /red_waypoints_array [autoware_msgs::LaneArray]
+    Out: /traffic_waypoints_array [autoware_msgs::LaneArray]
+  -->
+  <node pkg='lane_planner' type='lane_stop' name='lane_stop' />
+
+  <!--
+    # lane_select #
+    In:  /current_pose [geometry_msgs::PoseStamped]
+    In:  /current_velocity [geometry_msgs::TwistStamped]
+    In:  /traffic_waypoints_array [autoware_msgs::LaneArray]
+    Out: /base_waypoints [autoware_msgs::Lane]
+    Out: /change_flag [std_msgs::Int32]
+    Out: /closest_waypoint [std_msgs::Int32]
+    Out: /current_lane_id [std_msgs::Int32]
+    Out: /lane_select_marker [visualization_msgs::MarkerArray]
+    Out: /vehicle_location [autoware_msgs::VehicleLocation]
+  -->
+  <node pkg='lane_planner' type='lane_select' name='lane_select' />
+
+</launch>

@@ -1,0 +1,56 @@
+<launch>
+  <arg name='host'/>
+  <arg name='port'/>
+  <arg name='town'/>
+  <arg name='vehicle_filter'/>
+  <arg name='role_name'/>
+  <arg name='spawn_point'/>
+  <arg name='sensor_definition_file'/>
+  <arg name='use_manual_control'/>
+
+  <!-- carla autoware bridge -->
+  <include file='$(find carla_ros_bridge)/launch/carla_ros_bridge.launch'>
+    <arg name='host' value='$(arg host)'/>
+    <arg name='port' value='$(arg port)'/>
+    <arg name='town' value='$(arg town)'/>
+  </include>
+
+  <!-- carla autoware ego vehicle -->
+  <include file='$(find carla_ego_vehicle)/launch/carla_ego_vehicle.launch' >
+    <arg name='host' value='$(arg host)'/>
+    <arg name='port' value='$(arg port)'/>
+    <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
+    <arg name='role_name' value='$(arg role_name)'/>
+    <arg name='spawn_point' value='$(arg spawn_point)'/>
+    <arg name='sensor_definition_file' value='$(arg sensor_definition_file)'/>
+  </include>
+
+  <group if='$(arg use_manual_control)'>
+    <!-- carla manual control -->
+    <include file='$(find carla_manual_control)/launch/carla_manual_control.launch'>
+      <arg name='role_name' value='$(arg role_name)'/>
+    </include>
+  </group>
+
+  <group unless='$(arg use_manual_control)'>
+
+    <!-- carla ackermann control -->
+    <include file='$(find carla_ackermann_control)/launch/carla_ackermann_control.launch'>
+      <arg name='role_name' value='$(arg role_name)'/>
+    </include>
+
+    <!-- tune carla ackermann controller parameters -->
+    <node name='$(anon dynparam)' pkg='dynamic_reconfigure' type='dynparam' args='set_from_parameters carla/ego_vehicle/ackermann_control'>
+      <param name='speed_Kp' type='double' value='0.15' />
+      <param name='speed_Ki' type='double' value='0.0' />
+      <param name='speed_Kd' type='double' value='0.4' />
+
+      <param name='accel_Kp' type='double' value='0.03' />
+      <param name='accel_Ki' type='double' value='0.0' />
+      <param name='accel_Kd' type='double' value='0.05' />
+    </node>
+
+  </group>
+
+</launch>
+

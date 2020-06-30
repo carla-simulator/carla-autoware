@@ -1,0 +1,79 @@
+<launch>
+  <!--
+    ###################
+    ## Configuration ##
+    ###################
+  -->
+  <arg name='host' default='localhost'/>
+  <arg name='port' default='2000'/>
+  <arg name='town' default='Town01'/>
+
+  <arg name='agent' default='agent'/>
+
+  <arg name='role_name' default='ego_vehicle'/>
+  <!-- use comma separated format "x,y,z,roll,pìtch,yaw" -->
+  <arg name='spawn_point' default=''/>
+
+  <arg name='sensor_definition_file' default='$(find carla_autoware_bridge)/$(arg agent)/config/sensors.json'/>
+
+  <!-- vehicle info -->
+  <arg name='vehicle_model' default='vehicle.toyota.prius'/>
+  <arg name='vehicle_length' default='4.54'/>
+  <arg name='vehicle_width' default='2.00'/>
+  <arg name='vehicle_wheelbase' default='2.7'/>
+
+  <arg name='use_ground_truth_localization' default='false'/>
+  <arg name='use_ground_truth_detections' default='false'/>
+  <arg name='use_manual_control' default='false'/>
+
+  <!--
+    ###########################
+    ## CARLA Autoware bridge ##
+    ###########################
+  -->
+  <include file='$(find carla_autoware_bridge)/launch/carla_autoware_bridge.launch'>
+    <arg name='host' value='$(arg host)'/>
+    <arg name='port' value='$(arg port)'/>
+    <arg name='town' value='$(arg town)'/>
+    <arg name='vehicle_filter' value='$(arg vehicle_model)'/>
+    <arg name='role_name' value='$(arg role_name)'/>
+    <arg name='spawn_point' value='$(arg spawn_point)'/>
+    <arg name='sensor_definition_file' value='$(arg sensor_definition_file)'/>
+    <arg name='use_manual_control' value='$(arg use_manual_control)'/>
+  </include>
+
+  <!--
+    ##################
+    ## Agent bridge ##
+    ##################
+  -->
+  <include file='$(find carla_autoware_bridge)/$(arg agent)/bridge.launch'>
+    <arg name='role_name' value='$(arg role_name)'/>
+    <arg name='wheelbase' value='$(arg vehicle_wheelbase)'/>
+  </include>
+
+  <!--
+    ####################
+    ## Autoware agent ## 
+    ####################
+  -->
+  <include file='$(find carla_autoware_bridge)/$(arg agent)/my_agent.launch'>
+    <arg name='town' value='$(arg town)'/>
+    <arg name='vehicle_length' value='$(arg vehicle_length)'/>
+    <arg name='vehicle_width' value='$(arg vehicle_width)'/>
+    <arg name='use_ground_truth_localization' value='$(arg use_ground_truth_localization)'/>
+    <arg name='use_ground_truth_detections' value='$(arg use_ground_truth_detections)'/>
+    <arg name='use_manual_control' value='$(arg use_manual_control)'/>
+  </include>
+
+  <!--
+    ###################
+    ## Visualization ## 
+    ###################
+  -->
+  <arg name='rvizconfig' default='$(find carla_autoware_bridge)/$(arg agent)/rviz/config.rviz'/>
+  <!--<arg name='rvizconfig' default='$(find carla_autoware_bridge)/$(arg agent)/rviz/record.rviz'/>-->
+  <node name='rviz' pkg='rviz' type='rviz' args='-d $(arg rvizconfig)'/>
+
+</launch>
+

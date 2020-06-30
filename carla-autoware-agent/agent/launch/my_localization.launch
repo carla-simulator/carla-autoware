@@ -1,0 +1,65 @@
+<launch>
+
+  <!--
+    # can2odom #
+    reads the vehicle status and published the odometry on /vehicle/odom (nav_msgs::Odometry)
+    In:  /vehicle_status (vehicle status)
+    Out: /vehicle/odom   (odometry)
+  -->
+  <include file='$(find autoware_connector)/launch/can2odom.launch'/>
+
+  <!--
+    # GNSS #
+    Carla is reporting a gps fix on topic /carla/<role_name>/gnss/front/gnss
+    This can be used as Autoware pose provider. The resulting pose is published on /gnss_pose
+    @todo This is currently disabled. Instead the carla_autoware_bridge publishes a ground-truth /gnss_pose
+  -->
+  <!--
+  <node pkg='topic_tools' type='relay' name='gnss_relay' args='/carla/$(arg role_name)/gnss/gnss1/fix /fix'/>
+  <include file='$(find gnss_localizer)/launch/fix2tfpose.launch'/>
+  -->
+
+  <!-- Setup -->
+  <arg name='x' value='0'/>
+  <arg name='y' value='0.0'/>
+  <arg name='z' value='2.4'/>
+  <arg name='yaw' value='0.0'/>
+  <arg name='pitch' value='0.0'/>
+  <arg name='roll' value='0.0'/>
+  <arg name='frame_id' value='/base_link'/>
+  <arg name='child_frame_id' value='/velodyne'/>
+  <arg name='period_in_ms' value='10'/>
+
+  <!-- tf parameters for ndt_matching -->
+  <param name='tf_x' value='$(arg x)'/>
+  <param name='tf_y' value='$(arg y)'/>
+  <param name='tf_z' value='$(arg z)'/>
+  <param name='tf_yaw' value='$(arg yaw)'/>
+  <param name='tf_pitch' value='$(arg pitch)'/>
+  <param name='tf_roll' value='$(arg roll)'/>
+  <param name='localizer' value='velodyne'/>
+
+  <!--
+    # points downsampler #
+    Reduces the amount of points. Resulting point cloud is used by ndt_matching
+    In:  /points_raw
+    Out: /filtered_points
+  -->
+  <include file='$(find points_downsampler)/launch/points_downsample.launch' />
+
+  <!--
+    # ndt_matching #
+    In:  /filted_points  (filtered pointcloud)
+         /gnss_pose      (pose from gnss)
+         /vehicle/odom   (odometry)
+         /initialpose    (currently not published)
+    Out: /localizer_pose (estimated pose)
+  -->
+  <include file='$(find lidar_localizer)/launch/ndt_matching.launch'>
+    <arg name='get_height' value='true'/>
+    <arg name='use_gnss' value='true'/>
+    <arg name='use_odom' value='true'/>
+    <arg name='use_imu' value='true'/>
+  </include>
+
+</launch>
