@@ -7,12 +7,14 @@ This repository contains a demonstrator of an autoware agent ready to be execute
 ## CARLA autoware agent
 The autoware agent is provided as a ROS package. All the configuration can be found inside the `carla-autoware-agent` folder.
 
+![carla-autoware](docs/images/carla_autoware.png)
+
 The easiest way to run the agent is by building and running the provided docker image.
 
 ### Requirements
 
 - Docker (19.03+)
-- Nvidia docker. (https://github.com/NVIDIA/nvidia-docker)
+- Nvidia docker (https://github.com/NVIDIA/nvidia-docker)
 
 ### Setup
 
