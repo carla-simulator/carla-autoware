@@ -28,7 +28,7 @@
   />
 
   <!--<include file='$(find map_file)/launch/lanelet2_map_loader.launch'>-->
-    <!--<arg name='file_name' value='$(env CARLA_MAPS_PATH)/vector_maps/lanelet2/$(arg town).osm'/>-->
+    <!--<arg name='file_name' value='$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/lanelet2/$(arg town).osm'/>-->
   <!--</include>-->
 
   <!--
