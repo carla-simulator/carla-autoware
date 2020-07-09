@@ -1,45 +1,55 @@
-# Autoware in Carla
+# Autoware in CARLA
 
-The carla autoware bridge is now hosted and maintained [here](https://gitlab.com/autowarefoundation/autoware.ai/simulation/-/tree/master/carla_simulator_bridge).
+The carla autoware bridge is now hosted and maintained [here](https://github.com/Autoware-AI/simulation/tree/master/carla_simulator_bridge).
 
-This repository contains additional files (e.g. launch files).
+This repository contains a demonstrator of an autoware agent ready to be executed with CARLA.
 
-# Carla-Autoware Docker image
-Build a Docker image which integrates the Carla Autoware Bridge into the Autoware Docker image
+## CARLA autoware agent
+The autoware agent is provided as a ROS package. All the configuration can be found inside the `carla-autoware-agent` folder.
 
-## Requirements
+The easiest way to run the agent is by building and running the provided docker image.
 
-- Docker 
-- Nvidia container runtime:
-Installation: https://github.com/NVIDIA/nvidia-container-runtime#installation
-Configuration: https://github.com/NVIDIA/nvidia-container-runtime#docker-engine-setup
-- NVidia Docker V2: https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)
+### Requirements
 
-### Build image
-Clone the Carla Autoware Bridge GIT repository and initialize the GIT submodules.
+- Docker (19.03+)
+- Nvidia docker. (https://github.com/NVIDIA/nvidia-docker)
 
-    #ensure that the GIT repo is clean
-    git clean -fdx
+### Setup
 
-    cd docker
-    ./build.sh <optional "docker build ..." parameters, e.g. setting build-args like proxies>
+Firstly clone the carla autoware repository alongside the needed [autoware contents](https://bitbucket.org/carla-simulator/autoware-contents.git):
 
-These commands will create a "carla-autoware:latest" Docker image.
+```sh
+git clone --recurse-submodules https://github.com/carla-simulator/carla-autoware
+```
 
-### Run image
+Afterwards, build the image with the following command:
 
-1. Run carla in a docker
+```sh
+./build.sh
+```
 
-Please consult the main README regarding execution of Carla, the Carla Autoware Bridge and the
-Autoware stack.
-Start Carla server as described there.
- 
-The bridge and the Autoware stack have to be executed within the Docker container. To start it:
+This will generate a `carla-autoware:latest` docker image.
 
-    <in docker directory>
-    ./run.sh
+### Run the agent
 
-Within the Docker shell, start Autoware (including the carla-autoware-bridge):
+1. Run CARLA in a docker container.
 
-    roslaunch $CARLA_AUTOWARE_ROOT/devel.launch
+To start a CARLA server within a docker container run the following command:
 
+```sh
+docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:0.9.9
+```
+
+You may find more information about running CARLA using docker [here](https://carla.readthedocs.io/en/latest/build_docker/)
+
+2. Run the `carla-autoware` image: 
+
+```sh
+./run.sh
+```
+
+This will start an interactive shell inside the container. To start the agent run the following command:
+
+```sh
+roslaunch carla_autoware_agent carla_autoware_agent.launch
+```

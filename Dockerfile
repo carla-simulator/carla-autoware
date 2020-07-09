@@ -17,9 +17,9 @@ RUN echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla/dist/carla-0.9.9-py2.
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
         python-pip \
         python-wheel \
-	    ros-melodic-ackermann-msgs \
+        ros-melodic-ackermann-msgs \
         ros-melodic-derived-object-msgs \
-	&& sudo rm -rf /var/lib/apt/lists/*
+    && sudo rm -rf /var/lib/apt/lists/*
 RUN pip install simple-pid pygame networkx==2.2
 
 RUN git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git
