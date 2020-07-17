@@ -39,7 +39,7 @@ This will generate a `carla-autoware:latest` docker image.
 To start a CARLA server within a docker container run the following command:
 
 ```sh
-docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:0.9.9
+docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:latest
 ```
 
 You may find more information about running CARLA using docker [here](https://carla.readthedocs.io/en/latest/build_docker/)
