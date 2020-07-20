@@ -1,0 +1,64 @@
+<launch>
+  <arg name='role_name' default='ego_vehicle'/>
+  <arg name='wheelbase' default='2.7'/>
+
+  <!--
+    ##################
+    ## TF remapping ##
+    ##################
+  -->
+  <!-- world to map tf -->
+  <node pkg='tf'  type='static_transform_publisher' name='world_to_map' args='0 0 0 0 0 0 /world /map 10' />
+
+  <!-- map to mobility tf -->
+  <node pkg='tf'  type='static_transform_publisher' name='map_to_mobility' args='0 0 0 0 0 0 /map /mobility 10' />
+
+  <!-- ego_vehicle to base_link tf -->
+  <!-- Disabled as it gets published by ndt_matching -->
+  <!--<node pkg='tf'  type='static_transform_publisher' name='$(arg role_name)_to_baselink' args='0 0 0 0 0 0 /$(arg role_name) /base_link 10' />-->
+
+  <!-- ego_vehicle/gnss to gps tf -->
+  <node pkg='tf'  type='static_transform_publisher' name='$(arg role_name)gnss_to_gps' args='0 0 0 0 0 0 /$(arg role_name)/gnss/gnss1 /gps 10' />
+
+  <!-- ego_vehicle/lidar to velodyne tf -->
+  <node pkg='tf'  type='static_transform_publisher' name='$(arg role_name)lidar_to_velodyne' args='0 0 0 0 0 0 /$(arg role_name)/lidar/lidar1 /velodyne 10' />
+
+  <!-- ego_vehicle/cameraFront to camera tf -->
+  <node pkg='tf'  type='static_transform_publisher' name='$(arg role_name)camerafront_to_camera' args='0 0 0 0 0 0 /$(arg role_name)/camera/rgb/front /camera 10' />
+
+  <!--
+    #############################################
+    ## topic remapping + data type conversions ##
+    #############################################
+  -->
+  <!--
+    # lidar #
+    remap carla lidar to autoware.
+    @todo: to reduce load, Autoware should directly use the Carla-topic.
+  -->
+  <node pkg='topic_tools' type='relay' name='points_relay' args='/carla/$(arg role_name)/lidar/lidar1/point_cloud /points_raw'/>
+
+  <!--
+    # camera #
+    remap carla front camera to autoware
+    @todo: to reduce load, Autoware should directly use the Carla-topic.
+  -->
+  <node pkg='topic_tools' type='relay' name='imag_relay' args='/carla/$(arg role_name)/camera/rgb/front/image_color /image_raw'/>
+  <node pkg='topic_tools' type='relay' name='info_relay' args='/carla/$(arg role_name)/camera/rgb/front/camera_info /camera_info'/>
+
+  <!--
+    # gnss #
+    Extract the pose from the carla odometry.
+    Disable this if Autoware should calculate its pose from gnss (see my_localization.launch)
+  -->
+  <node pkg='carla_autoware_bridge' type='odometry_to_posestamped' name='odometry_to_posestamped'/>
+
+  <!-- convert twist to carla ackermann drive-->
+  <node pkg='carla_autoware_bridge' type='vehiclecmd_to_ackermanndrive' name='vehiclecmd_to_ackermanndrive' output='screen'>
+    <param name='wheelbase' value='$(arg wheelbase)'/>
+  </node>
+
+  <!-- convert the vehicle status from carla to autoware -->
+  <node pkg='carla_autoware_bridge' type='carla_to_autoware_vehicle_status' name='carla_to_autoware_vehicle_status' output='screen'/>
+
+</launch>

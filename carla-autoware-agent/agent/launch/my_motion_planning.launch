@@ -1,0 +1,119 @@
+<launch>
+
+  <!--
+    # costmap_generator #
+    This node reads PointCloud and/or DetectedObjectArray and creates an OccupancyGrid and GridMap.
+    In:  /points_no_ground [sensor_msgs::PointCloud2]
+    In:  /prediction/motion_predictor/objects [autoware_msgs::DetectedObjectArray] 
+    Out: /semantics/costmap [grid_map_msgs::GridMap]
+    Out: /semantics/costmap_generator/occupancy_grid [nav_msgs::OccupancyGrid]
+  -->
+  <include file='$(find costmap_generator)/launch/costmap_generator.launch'>
+    <arg name='use_points' default='true' />
+    <arg name='use_wayarea' default='true' />
+    <arg name='use_objects_box' default='true' />
+    <arg name='use_objects_convex_hull' default='false' />
+
+    <arg name='objects_input' default='/prediction/motion_predictor/objects' />
+    <arg name='points_input' default='/points_no_ground' />
+  </include>
+
+  <!--
+    # obstacle_avoid #
+    In:  /base_waypoints [autoware_msgs/Lane]
+    In:  /closest_waypoint [std_msgs/Int32]
+    In:  /current_pose [geometry_msgs/PoseStamped]
+    In:  /current_velocity [geometry_msgs/TwistStamped]
+    In:  /obstacle_waypoint [std_msgs/Int32]
+    In:  /semantics/costmap_generator/occupancy_grid [nav_msgs/OccupancyGrid]
+    Out: /safety_waypoints [autoware_msgs::Lane]
+  -->
+  <include file='$(find waypoint_planner)/launch/astar_avoid.launch'>
+  </include>
+
+  <!--
+    # velocity_set #
+    In:  /current_pose [geometry_msgs::PoseStamped]
+    In:  /current_velocity [geometry_msgs::TwistStamped]
+    In:  /localizer_pose [geometry_msgs::PoseStamped]
+    In:  /points_no_ground [sensor_msgs::PointCloud2]
+    In:  /safety_waypoints [autoware_msgs::Lane]
+    In:  /state/stopline_wpidx [std_msgs::Int32]
+    In:  /vector_map_info/* [vector_map_msgs::*]
+    Out: /detection_range [visualization_msgs::MarkerArray]
+    Out: /final_waypoints [autoware_msgs::Lane]
+    Out: /node_status [autoware_system_msgs::NodeStatus]
+    Out: /obstacle [visualization_msgs::Marker]
+    Out: /obstacle_waypoint [std_msgs::Int32]
+    Out: /stopline_waypoint [std_msgs::Int32]
+  -->
+  <include file='$(find waypoint_planner)/launch/velocity_set.launch'>
+    <arg name='use_crosswalk_detection' default='false' />
+    <arg name='points_topic' default='points_no_ground' />
+    <arg name='velocity_offset' default='4' />
+    <arg name='decelerate_vel_min' default='1.3' />
+    <arg name='remove_points_upto' default='0.5' />
+    <arg name='enable_multiple_crosswalk_detection' default='true' />
+    <arg name='stop_distance_obstacle' default='15.0' />
+    <arg name='stop_distance_stopline' default='5.0' />
+    <arg name='detection_range' default='1.3' />
+    <arg name='points_threshold' default='10' />
+    <arg name='detection_height_top' default='2.5' />
+    <arg name='detection_height_bottom' default='-1.7' />
+    <arg name='deceleration_obstacle' default='1.5' />
+    <arg name='deceleration_stopline' default='0.6' />
+    <arg name='velocity_change_limit' default='15' />
+    <arg name='deceleration_range' default='0' />
+    <arg name='temporal_waypoints_size' default='100' />
+  </include>
+
+  <!--
+    # pure_pursuit #
+    Follow a list of waypoints
+    In:  /final_waypoints [autoware_msgs::Lane]
+    In:  /current_pose [geometry_msgs::PoseStamped]
+    In:  /current_velocity [geometry_msgs::TwistStamped]
+    Out: /ctrl_raw [autoware_msgs::ControlCommandStamped]
+    Out: /twist_raw [geometry_msgs::TwistStamped]
+  -->
+  <node pkg='rostopic' type='rostopic' name='config_waypoint_follower_rostopic'
+        args='pub -l /config/waypoint_follower autoware_config_msgs/ConfigWaypointFollower
+        "{ header: auto, param_flag: 0, velocity: 6.0, lookahead_distance: 4.0, lookahead_ratio: 2.0, minimum_lookahead_distance: 6.0, displacement_threshold: 0.0, relative_angle_threshold: 0.0 }"'/>
+
+  <include file='$(find pure_pursuit)/launch/pure_pursuit.launch'/> 
+
+  <!--
+    # twist_filter #
+    Launches twist_filter and twist_gate
+    In:  /ctrl_raw [autoware_msgs::ControlCommandStamped]
+    In:  /twist_raw [geometry_msgs::TwistStamped]
+    Out: /vehicle_cmd [autoware_msgs::VehicleCmd] (the combined vehicle command for actuator)
+  -->
+  <include file='$(find twist_filter)/launch/twist_filter.launch'>
+  </include>
+
+  <!-- 
+    # waypoint visualizer #
+    to visualize the waypoints in rviz
+    In:  /closest_waypoint [std_msgs::Int32]
+    In:  /final_waypoints [autoware_msgs::Lane]
+    In:  /traffic_waypoints_array [autoware_msgs::LaneArray]
+    In:  /lane_waypoints_array [autoware_msgs::LaneArray]
+    Out: /global_waypoints_mark [visualization_msgs::MarkerArray]
+    Out: /local_waypoionts_mark [visualization_msgs::MarkerArray]
+  -->
+  <node pkg='waypoint_maker' type='waypoint_marker_publisher' name='waypoint_marker_publisher' output='screen'/>
+
+  <!-- 
+    # waypoint velocity visualizer #
+    to visualize the waypoints velocity in rviz
+    In:  /current_pose [geometry_msgs::PoseStamped]
+    In:  /current_velocity [geometry_msgs::TwistStamped]
+    In:  /final_waypoints [autoware_msgs::Lane]
+    In:  /lane_waypoints_array [autoware_msgs::LaneArray]
+    In:  /twist_cmd [geometry_msgs::TwistStamped]
+    Out: /waypoints_velocity [visualization_msgs::MarkerArray]
+  -->
+  <include file='$(find waypoint_maker)/launch/waypoint_velocity_visualizer.launch' />
+
+</launch>

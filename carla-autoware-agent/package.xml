@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_autoware_agent</name>
+  <version>0.0.1</version>
+  <description>The carla_autoware_agent package</description>
+  <maintainer email="carla.simulator@gmail.com">CARLA Simulator Team</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>carla_autoware_bridge</exec_depend>
+</package>

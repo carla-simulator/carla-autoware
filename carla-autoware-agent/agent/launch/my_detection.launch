@@ -1,0 +1,100 @@
+<launch>
+
+  <!-- 
+    # lidar detector #
+    In:  /points_no_ground [sensor_msgs::PointCloud2]
+    Out: /cluster_centroids [autoware_msgs::Centroids]
+    Out: /detection/lidar_detector/cloud_clusters [autoware_msgs::CloudClusterArray]
+    Out: /detection/lidar_detector/objects [autoware_msgs::DetectedObjectArray]
+    Out: /detection/lidar_detector/objects_filtered [autoware_msgs::DetectedObjectArray]
+    Out: /points_cluster [sensor_msgs::PointCloud2]
+    Out: /points_ground [sensor_msgs::PointCloud2]
+    Out: /points_lanes [sensor_msgs::PointCloud2]
+  -->
+  <include file='$(find lidar_euclidean_cluster_detect)/launch/lidar_euclidean_cluster_detect.launch'>
+    <arg name='points_node' value='/points_no_ground'/>
+    <arg name='use_gpu' value='true'/>
+
+    <arg name='remove_ground' value='false'/>
+    <arg name='downsample_cloud' value='false'/>
+
+    <arg name='clip_min_height' value='-2.5'/>
+    <arg name='clip_max_height' value='2.5'/>
+
+    <!-- Remove the detected objects outside of the drivable area -->
+    <arg name='use_vector_map' value='true'/>
+  </include>
+
+  <!--
+    # lidar shape estimation #
+    In:  /detection/lidar_detector/objects_filtered [autoware_msgs::DetectedObjectArray]
+    Out: /detection/l_shaped/objects [autoware_msgs::DetectedObjectArray]
+  -->
+  <include file='$(find lidar_naive_l_shape_detect)/launch/lidar_naive_l_shape_detect.launch'>
+    <arg name='input_topic' value='/detection/lidar_detector/objects_filtered'/>
+    <arg name='random_ponts' value='160'/>
+    <arg name='sensor_height' value='2.4'/>
+  </include>
+
+  <!--
+    # lidar tracker #
+    In:  /detection/l_shaped/objects [autoware_msgs::DetectedObjectArray]
+    Out: /detection/lidar_tracker/objects [autoware_msgs::DetectedObjectArray]
+  -->
+  <include file='$(find imm_ukf_pda_track)/launch/imm_ukf_pda_track.launch'>
+    <arg name='namespace' value='/detection/lidar_tracker'/>
+    <arg name='tracker_input_topic' value='/detection/l_shaped/objects'/>
+    <arg name='tracker_output_topic' value='/detection/lidar_tracker/objects'/>
+  </include>
+
+  <!--
+    # vision detection #
+    In:  /image_raw [sensor_msgs::Image]
+    Out: /detection/image_detector/objects [autoware_msgs::DetectedObjectArray]
+  -->
+  <include file='$(find vision_darknet_detect)/launch/vision_yolo3_detect.launch'>
+    <arg name='pretrained_model_file' value='$(env CARLA_AUTOWARE_CONTENTS)/config/yolov3/yolov3.weights'/>
+    <arg name='names_file' value='$(env CARLA_AUTOWARE_CONTENTS)/config/yolov3/coco.names'/>
+    <arg name='score_threshold' value='0.50'/>
+    <arg name='nms_threshold' value='0.30'/>
+  </include>
+
+  <!--
+    # vision tracker #
+    In:  /detection/image_detector/objects [autoware_msgs::DetectedObjectArray]
+    Out: /detection/image_tracker/objects [autoware_msgs::DetectedObjectArray]
+  -->
+  <include file='$(find vision_beyond_track)/launch/vision_beyond_track.launch'>
+    <arg name='objects_topic_src' value='/detection/image_detector/objects'/>
+  </include>
+
+  <node pkg='detected_objects_visualizer' type='visualize_rects' name='image_tracker_rects' output='screen'>
+    <param name='image_src' value='/image_raw'/>
+    <param name='image_out' value='/image_tracker_rects'/>
+    <param name='object_src' value='/detection/image_tracker/objects'/>
+  </node>
+
+  <!--
+    # range vision fusion #
+    In:  /detection/image_tracker/objects [autoware_msgs::DetectedObjectArray]
+    In:  /detection/lidar_tracker/objects [autoware_msgs::DetectedObjectArray]
+    Out: /detection/fusion_tools/objects [autoware_msgs::DetectedObjectArray]
+  -->
+  <include file='$(find range_vision_fusion)/launch/range_vision_fusion.launch'>
+    <arg name='detected_objects_range' value='/detection/lidar_tracker/objects'/>
+    <arg name='detected_objects_vision' value='/detection/image_tracker/objects'/>
+    <arg name='camera_info_src' value='/camera_info'/>
+    <arg name='namespace' value='/detection/fusion_tools'/>
+  </include>
+
+  <!--
+    # motion predictor #
+    In:  /detection/fusion_tools/objects [autoware_msgs::DetectedObjectArray]
+    Out: /prediction/motion_predictor/objects [autoware_msgs::DetectedObjectArray]
+    Out: /prediction/motion_predictor/path_markers [visualization_msgs::MarkerArray]
+  -->
+  <include file='$(find naive_motion_predict)/launch/naive_motion_predict.launch'>
+    <arg name='input_topic' value='/detection/fusion_tools/objects'/>
+  </include>
+
+</launch>

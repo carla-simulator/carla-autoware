@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- 
+    # Ray ground filter #
+    filter points below ground
+    In:  /points_raw [sensor_msgs::PointCloud2]
+    Out: /points_no_ground (points above ground) [sensor_msgs::PointCloud2]
+    Out: /points_ground [sensor_msgs::PointCloud2]
+  -->
+  <include file='$(find points_preprocessor)/launch/ray_ground_filter.launch'>
+    <arg name='input_point_topic' value='/points_raw'/> 
+
+    <arg name='clipping_height' value='3.5'/> <!-- Remove points above this height value -->
+    <arg name='min_point_distance' value='0.50'/> <!-- Removes points closer than this distance from the sensor origin -->
+    <arg name='radial_divider_angle' value='0.1'/> <!-- Angle of each radial division on the XY plane -->
+    <arg name='concentric_divider_distance' value='0.0'/> <!-- Distance of each concentric division on the XY plane -->
+    <arg name='local_max_slope' value='5.0'/> <!-- Max slope of the ground between points -->
+    <arg name='general_max_slope' value='3.0'/> <!-- Max slope of the ground in the entire pointCloud, used when reclassification occurs -->
+    <arg name='min_height_threshold' value='0.05'/> <!-- Minimum height threshold between points -->
+    <arg name='reclass_distance_threshold' value='0.2'/> <!-- Distance between points at which re classification will occur -->
+
+    <arg name='no_ground_point_topic' value='/points_no_ground'/>
+    <arg name='ground_point_topic' value='/points_ground'/>
+  </include>
+
+</launch>

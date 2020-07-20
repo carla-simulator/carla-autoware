@@ -1,0 +1,77 @@
+<launch>
+
+  <arg name='town' default='Town01'/>
+
+  <arg name='vehicle_length' default='4.54'/>
+  <arg name='vehicle_width' default='2.00'/>
+
+  <arg name='use_ground_truth_localization' default='false'/>
+  <arg name='use_ground_truth_detections' default='false'/>
+  <arg name='use_manual_control' default='false'/>
+
+  <!--
+    # vehicle_model #
+    provides the vehicle_model mesh to rviz
+  -->
+  <include file='$(find vehicle_description)/launch/vehicle_model.launch'>
+    <arg name='offset_x' default='0.0'/>
+    <arg name='model_path' default='$(find vehicle_description)/urdf/prius.urdf'/>
+  </include>
+
+  <!-- 
+    # map #
+    @todo this launch file should be removed! Automatically detection by the bride
+  -->
+  <include file='$(find carla_autoware_agent)/agent/launch/my_map.launch'>
+    <arg name='town' value='$(arg town)'/>
+  </include>
+
+  <!-- 
+    # sensing #
+  -->
+  <include file='$(find carla_autoware_agent)/agent/launch/my_sensing.launch'>
+  </include>
+
+  <!-- 
+    # localization #
+  -->
+  <group if='$(arg use_ground_truth_localization)'>
+    <remap from='/ground_truth/current_pose' to='/current_pose'/>
+    <remap from='/ground_truth/current_velocity' to='/current_velocity'/>
+    <node pkg='carla_autoware_bridge' type='carla_to_autoware_localization' name='carla_to_autoware_localization'/>
+  </group>
+
+  <group unless='$(arg use_ground_truth_localization)'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_localization.launch'>
+    </include>
+  </group>
+
+  <!-- 
+    # detection #
+  -->
+  <group if='$(arg use_ground_truth_detections)'>
+    <remap from='/ground_truth/obstacles' to='/prediction/motion_predictor/objects'/>
+    <node pkg='carla_autoware_bridge' type='carla_to_autoware_detected_objects' name='carla_to_autoware_detected_objects' output='screen'/>
+  </group>
+
+  <group unless='$(arg use_ground_truth_detections)'>
+    <include file='$(find carla_autoware_agent)/agent/launch/my_detection.launch'>
+    </include>
+  </group>
+
+  <group unless='$(arg use_manual_control)'>
+    <!-- 
+      # mission planning #
+    -->
+    <include file='$(find carla_autoware_agent)/agent/launch/my_mission_planning.launch'>
+    </include>
+
+    <!-- 
+      # motion planning #
+    -->
+    <include file='$(find carla_autoware_agent)/agent/launch/my_motion_planning.launch'>
+    </include>
+  </group>
+
+</launch>
+
