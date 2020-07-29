@@ -34,9 +34,9 @@ This will generate a `carla-autoware:latest` docker image.
 
 ### Run the agent
 
-1. Run CARLA in a docker container.
+1. Run a CARLA server.
 
-To start a CARLA server within a docker container run the following command:
+You can either run the CARLA server in your host machine or within a container. To start a CARLA server within a docker container run the following command:
 
 ```sh
 docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:latest
@@ -55,3 +55,7 @@ This will start an interactive shell inside the container. To start the agent ru
 ```sh
 roslaunch carla_autoware_agent carla_autoware_agent.launch
 ```
+
+## CARLA Autoware contents
+The [autoware-contents](https://bitbucket.org/carla-simulator/autoware-contents.git) repository contains additional data required to run Autoware with CARLA, including the point cloud maps, vector maps and configuration files.
+
