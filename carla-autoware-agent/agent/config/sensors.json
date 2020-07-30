@@ -6,12 +6,12 @@
             "x": 2.0, "y": 0.0, "z": 2.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
             "width": 800,
             "height": 600,
-            "fov": 100,
+            "fov": 90.0,
             "sensor_tick": 0.05,
             "gamma": 2.2,
             "shutter_speed": 200.0,
             "iso": 200.0,
-            "fstop": 8,
+            "fstop": 8.0,
             "min_fstop": 1.2,
             "blade_count": 5,
             "exposure_mode": "manual",
@@ -42,7 +42,9 @@
             "lens_k": -1.0,
             "lens_kcube": 0.0,
             "lens_x_size": 0.08,
-            "lens_y_size": 0.08
+            "lens_y_size": 0.08,
+            "bloom_intensity": 0.675,
+            "lens_flare_intensity": 0.1
         },
         {
             "type": "sensor.camera.rgb",
@@ -50,12 +52,12 @@
             "x": -4.5, "y": 0.0, "z": 2.8, "roll": 0.0, "pitch": -20.0, "yaw": 0.0,
             "width": 800,
             "height": 600,
-            "fov": 100,
+            "fov": 90.0,
             "sensor_tick": 0.05,
             "gamma": 2.2,
             "shutter_speed": 200.0,
             "iso": 200.0,
-            "fstop": 8,
+            "fstop": 8.0,
             "min_fstop": 1.2,
             "blade_count": 5,
             "exposure_mode": "manual",
@@ -86,7 +88,9 @@
             "lens_k": -1.0,
             "lens_kcube": 0.0,
             "lens_x_size": 0.08,
-            "lens_y_size": 0.08
+            "lens_y_size": 0.08,
+            "bloom_intensity": 0.675,
+            "lens_flare_intensity": 0.1
         },
         {
             "type": "sensor.lidar.ray_cast",
