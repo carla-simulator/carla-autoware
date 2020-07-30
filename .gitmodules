@@ -1,4 +1,4 @@
 [submodule "autoware_data"]
 	path = autoware-contents
 	url = https://bitbucket.org/carla-simulator/autoware-contents.git
-	branch = joel-mb/vector_map
+	branch = master
