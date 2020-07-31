@@ -53,7 +53,7 @@ You may find more information about running CARLA using docker [here](https://ca
 This will start an interactive shell inside the container. To start the agent run the following command:
 
 ```sh
-roslaunch carla_autoware_agent carla_autoware_agent.launch
+roslaunch carla_autoware_agent carla_autoware_agent.launch town:=Town01
 ```
 
 ## CARLA Autoware contents
