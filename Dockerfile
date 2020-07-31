@@ -31,7 +31,8 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     && sudo rm -rf /var/lib/apt/lists/*
 RUN pip install simple-pid pygame networkx==2.2
 
-RUN git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git
+RUN git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git \
+    && cd ros-bridge && git checkout joel-mb/timeout
 
 # CARLA Autoware agent
 COPY --chown=autoware . ./carla-autoware
