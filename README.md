@@ -13,6 +13,7 @@ The easiest way to run the agent is by building and running the provided docker 
 
 ### Requirements
 
+- Ubuntu 18.04
 - Docker (19.03+)
 - Nvidia docker (https://github.com/NVIDIA/nvidia-docker)
 
@@ -30,19 +31,16 @@ Afterwards, build the image with the following command:
 ./build.sh
 ```
 
-This will generate a `carla-autoware:latest` docker image.
+This will generate a `carla-autoware:latest` docker image and will download CARLA 0.9.10 pre-release package inside the `carla-simulator` folder.
 
 ### Run the agent
 
 1. Run a CARLA server.
 
-You can either run the CARLA server in your host machine or within a container. To start a CARLA server within a docker container run the following command:
-
 ```sh
-docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:latest
+cd carla-simulator
+./CarlaUE4.sh
 ```
-
-You may find more information about running CARLA using docker [here](https://carla.readthedocs.io/en/latest/build_docker/)
 
 2. Run the `carla-autoware` image: 
 
