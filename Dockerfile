@@ -19,7 +19,8 @@ RUN cd ./Autoware \
 # CARLA PythonAPI
 RUN mkdir ./PythonAPI
 COPY --from=carla /home/carla/PythonAPI ./PythonAPI
-RUN echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla/dist/carla-0.9.9-py2.7-linux-x86_64.egg" >> .bashrc \
+RUN echo "export PYTHON2_EGG=$(ls /home/autoware/PythonAPI/carla/dist | grep py2.)" >> .bashrc \
+    && echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla/dist/\$PYTHON2_EGG" >> .bashrc \
     && echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla" >> .bashrc
 
 # CARLA ROS Bridge
@@ -31,8 +32,7 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     && sudo rm -rf /var/lib/apt/lists/*
 RUN pip install simple-pid pygame networkx==2.2
 
-RUN git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git \
-    && cd ros-bridge
+RUN git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git
 
 # CARLA Autoware agent
 COPY --chown=autoware . ./carla-autoware
