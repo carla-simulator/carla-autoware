@@ -1,7 +1,5 @@
-ARG CARLA_VERSION=latest
 ARG AUTOWARE_VERSION=1.14.0-melodic-cuda
 
-FROM carlasim/carla:$CARLA_VERSION AS carla
 FROM autoware/autoware:$AUTOWARE_VERSION
 
 USER autoware
@@ -18,10 +16,9 @@ RUN cd ./Autoware \
 
 # CARLA PythonAPI
 RUN mkdir ./PythonAPI
-COPY --from=carla /home/carla/PythonAPI ./PythonAPI
-RUN echo "export PYTHON2_EGG=$(ls /home/autoware/PythonAPI/carla/dist | grep py2.)" >> .bashrc \
-    && echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla/dist/\$PYTHON2_EGG" >> .bashrc \
-    && echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/carla" >> .bashrc
+ADD --chown=autoware https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/carla-0.9.10-py2.7-linux-x86_64.egg ./PythonAPI
+RUN echo "export PYTHON2_EGG=$(ls /home/autoware/PythonAPI | grep py2.)" >> .bashrc \
+    && echo "export PYTHONPATH=\$PYTHONPATH:~/PythonAPI/\$PYTHON2_EGG" >> .bashrc
 
 # CARLA ROS Bridge
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
