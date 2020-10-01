@@ -39,7 +39,8 @@ RUN cd carla_ws/src \
     && ln -s ../../ros-bridge \
     && ln -s ../../carla-autoware/carla-autoware-agent \
     && cd .. \
-    && source /opt/ros/melodic/setup.bash && catkin_make
+    && source /opt/ros/melodic/setup.bash \
+    && catkin_make
 
 RUN echo "export CARLA_AUTOWARE_CONTENTS=~/autoware-contents" >> .bashrc \
     && echo "source ~/carla_ws/devel/setup.bash" >> .bashrc \
