@@ -4,6 +4,8 @@ The carla autoware bridge is now hosted and maintained [here](https://github.com
 
 This repository contains a demonstrator of an autoware agent ready to be executed with CARLA.
 
+**The carla autoware integration requires CARLA 0.9.10.1. You can download it from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.10.1)**
+
 ## CARLA autoware agent
 The autoware agent is provided as a ROS package. All the configuration can be found inside the `carla-autoware-agent` folder.
 
@@ -27,7 +29,7 @@ git clone --recurse-submodules https://github.com/carla-simulator/carla-autoware
 Afterwards, build the image with the following command:
 
 ```sh
-./build.sh
+cd carla-autoware && ./build.sh
 ```
 
 This will generate a `carla-autoware:latest` docker image.
@@ -36,13 +38,9 @@ This will generate a `carla-autoware:latest` docker image.
 
 1. Run a CARLA server.
 
-You can either run the CARLA server in your host machine or within a container. To start a CARLA server within a docker container run the following command:
-
-```sh
-docker run -p 2000-2002:2000-2002 --runtime=nvidia --gpus all carlasim/carla:latest
 ```
-
-You may find more information about running CARLA using docker [here](https://carla.readthedocs.io/en/latest/build_docker/)
+./CarlaUE4.sh
+```
 
 2. Run the `carla-autoware` image: 
 
