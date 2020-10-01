@@ -4,7 +4,7 @@ The carla autoware bridge is now hosted and maintained [here](https://github.com
 
 This repository contains a demonstrator of an autoware agent ready to be executed with CARLA.
 
-**The carla autoware integration requires CARLA 0.9.10.1. You can download it from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.10)**
+**The carla autoware integration requires CARLA 0.9.10.1. You can download it from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.10.1)**
 
 ## CARLA autoware agent
 The autoware agent is provided as a ROS package. All the configuration can be found inside the `carla-autoware-agent` folder.
@@ -29,7 +29,7 @@ git clone --recurse-submodules https://github.com/carla-simulator/carla-autoware
 Afterwards, build the image with the following command:
 
 ```sh
-./build.sh
+cd carla-autoware && ./build.sh
 ```
 
 This will generate a `carla-autoware:latest` docker image.
