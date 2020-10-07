@@ -2,7 +2,6 @@ ARG AUTOWARE_VERSION=1.14.0-melodic-cuda
 
 FROM autoware/autoware:$AUTOWARE_VERSION
 
-USER autoware
 WORKDIR /home/autoware
 
 # Update simulation repo to latest master.
