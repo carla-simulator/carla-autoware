@@ -1,0 +1,38 @@
+<launch>
+  <!--
+    ###################
+    ## Configuration ##
+    ###################
+  -->
+  <arg name='address' default='localhost'/>
+  <arg name='port' default='9090'/>
+
+  <!--
+    #######################
+    ## ROS bridge server ##
+    #######################
+  -->
+  <include file='$(find rosbridge_server)/launch/rosbridge_websocket.launch'>
+    <arg name='address' value='$(arg address)'/>
+    <arg name='port' value='$(arg port)'/>
+  </include>
+
+  <!--
+    ############################
+    ## CARLA Autoware manager ##
+    ############################
+  -->
+  <node pkg="carla_autoware_manager" name="manager" type="manager.py" output="screen" required="true"/>
+
+  <!--
+    ######################
+    ## CARLA ROS bridge ##
+    ######################
+  -->
+  <!-- <include file='$(find rosbridge_server)/launch/rosbridge_websocket.launch'>
+    <arg name='address' value='$(arg address)'/>
+    <arg name='port' value='$(arg port)'/>
+  </include> -->
+
+</launch>
+

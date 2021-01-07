@@ -43,7 +43,8 @@ COPY --chown=autoware . ./carla-autoware
 RUN mkdir -p carla_ws/src
 RUN cd carla_ws/src \
     && ln -s ../../ros-bridge \
-    && ln -s ../../carla-autoware/carla-autoware-agent \
+    #&& ln -s ../../carla-autoware/carla-autoware-agent \
+    #&& ln -s ../../carla-autoware/carla-autoware-manager \
     && cd .. \
     && source /opt/ros/melodic/setup.bash \
     && catkin_make
