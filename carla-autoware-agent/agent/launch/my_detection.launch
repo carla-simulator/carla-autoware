@@ -97,4 +97,12 @@
     <arg name='input_topic' value='/detection/fusion_tools/objects'/>
   </include>
 
+  <!-- traffic light recognition -->
+  <!-- feat_proj -->
+  <node pkg="trafficlight_recognizer" type="feat_proj_lanelet2" name="feature_proj_lanelet2" output="screen"/>
+
+  <!-- region_tlr -->
+  <include file="$(find trafficlight_recognizer)/launch/traffic_light_recognition.launch">
+  </include>
+
 </launch>

@@ -8,7 +8,9 @@
     Out: /semantics/costmap [grid_map_msgs::GridMap]
     Out: /semantics/costmap_generator/occupancy_grid [nav_msgs::OccupancyGrid]
   -->
-  <include file='$(find costmap_generator)/launch/costmap_generator.launch'>
+  <include file='$(find costmap_generator)/launch/costmap_generator_option.launch'>
+    <arg name='use_ll2' value='true' />
+
     <arg name='use_points' default='true' />
     <arg name='use_wayarea' default='true' />
     <arg name='use_objects_box' default='true' />
@@ -47,8 +49,10 @@
     Out: /obstacle_waypoint [std_msgs::Int32]
     Out: /stopline_waypoint [std_msgs::Int32]
   -->
-  <include file='$(find waypoint_planner)/launch/velocity_set.launch'>
-    <arg name='use_crosswalk_detection' default='false' />
+  <include file='$(find waypoint_planner)/launch/velocity_set_option.launch'>
+    <arg name='use_ll2' value='true' />
+
+    <arg name='use_crosswalk_detection' default='true' />
     <arg name='points_topic' default='points_no_ground' />
     <arg name='velocity_offset' default='4' />
     <arg name='decelerate_vel_min' default='1.3' />

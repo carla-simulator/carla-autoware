@@ -17,6 +17,8 @@
     # decision_maker #
   -->
   <include file='$(find decision_maker)/launch/decision_maker.launch'>
+    <arg name='use_ll2' value='true' />
+
     <arg name='auto_engage' value='true' />
     <arg name='disuse_vector_map' value='true'/>
   </include>
@@ -33,6 +35,7 @@
     Out: /op_destinations_rviz [visualization_msgs::MarkerArray]
     Out: /vector_map_center_lines_rviz [visualization_msgs::MarkerArray]
   -->
+  <!-- TODO(joel) I cannot use this method!!! -->
   <group>
     <remap from='/lane_waypoints_array' to='/based/lane_waypoints_raw'/>
     <include file='$(find op_global_planner)/launch/op_global_planner.launch'>
@@ -72,7 +75,8 @@
     Out: /green_waypoints_array [autoware_msgs::LaneArray]
     Out: /red_waypoints_array [autoware_msgs::LaneArray]
   -->
-  <node pkg='lane_planner' type='lane_rule' name='lane_rule' />
+  <!-- TODO(joel): Add parameter use_ll2 -->
+  <node pkg='lane_planner' type='lane_rule_lanelet2' name='lane_rule' />
 
   <!--
     # lane_stop #

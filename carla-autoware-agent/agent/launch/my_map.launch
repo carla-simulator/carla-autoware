@@ -12,24 +12,24 @@
   <!--
     # vector map #
   -->
-  <node pkg='map_file' type='vector_map_loader' name='vector_map_loader' args='
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/area.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/intersection.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/line.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/point.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/whiteline.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/dtlane.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/lane.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/node.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/wayarea.csv 
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/stopline.csv 
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/roadsign.csv
-      $(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/vector.csv' 
-  />
+  <!--<node pkg='map_file' type='vector_map_loader' name='vector_map_loader' args='-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/area.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/intersection.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/line.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/point.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/whiteline.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/dtlane.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/lane.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/node.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/wayarea.csv -->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/stopline.csv -->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/roadsign.csv-->
+      <!--$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/asian/$(arg town)/vector.csv' -->
+  <!--/>-->
 
-  <!--<include file='$(find map_file)/launch/lanelet2_map_loader.launch'>-->
-    <!--<arg name='file_name' value='$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/lanelet2/$(arg town).osm'/>-->
-  <!--</include>-->
+  <include file='$(find map_file)/launch/lanelet2_map_loader.launch'>
+    <arg name='file_name' value='$(env CARLA_AUTOWARE_CONTENTS)/maps/vector_maps/lanelet2/$(arg town).osm'/>
+  </include>
 
   <!--
     # wayarea2grid #
