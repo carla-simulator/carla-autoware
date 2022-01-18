@@ -14,7 +14,7 @@
   <!-- use comma separated format "x,y,z,roll,pìtch,yaw" -->
   <arg name='spawn_point' default=''/>
 
-  <arg name='sensor_definition_file' default='$(find carla_autoware_agent)/$(arg agent)/config/sensors.json'/>
+  <arg name='sensor_definition_file' default='$(find carla_autoware_agent)/$(arg agent)/config/objects.json'/>
 
   <!-- vehicle info -->
   <arg name='vehicle_model' default='vehicle.toyota.prius'/>
@@ -54,7 +54,7 @@
 
   <!--
     ####################
-    ## Autoware agent ## 
+    ## Autoware agent ##
     ####################
   -->
   <include file='$(find carla_autoware_agent)/$(arg agent)/my_agent.launch'>
@@ -68,11 +68,10 @@
 
   <!--
     ###################
-    ## Visualization ## 
+    ## Visualization ##
     ###################
   -->
   <arg name='rvizconfig' default='$(find carla_autoware_agent)/$(arg agent)/rviz/config.rviz'/>
   <node name='rviz' pkg='rviz' type='rviz' args='-d $(arg rvizconfig)'/>
 
 </launch>
-
