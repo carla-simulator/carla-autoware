@@ -1,0 +1,50 @@
+diff --git a/carla_simulator_bridge/carla_autoware_bridge/launch/carla_autoware_bridge.launch b/carla_simulator_bridge/carla_autoware_bridge/launch/carla_autoware_bridge.launch
+index a4be5dd..549ab17 100644
+--- a/carla_simulator_bridge/carla_autoware_bridge/launch/carla_autoware_bridge.launch
++++ b/carla_simulator_bridge/carla_autoware_bridge/launch/carla_autoware_bridge.launch
+@@ -7,6 +7,7 @@
+   <arg name='spawn_point' default=''/>
+   <arg name='use_manual_control' default='false'/>
+   <arg name='sensor_definition_file'/>
++  <arg name="spawn_sensors_only" default="false"/>
+
+   <!-- carla autoware bridge -->
+   <include file='$(find carla_ros_bridge)/launch/carla_ros_bridge.launch'>
+@@ -16,13 +17,10 @@
+   </include>
+
+   <!-- carla autoware ego vehicle -->
+-  <include file='$(find carla_ego_vehicle)/launch/carla_ego_vehicle.launch' >
+-    <arg name='host' value='$(arg host)'/>
+-    <arg name='port' value='$(arg port)'/>
+-    <arg name='vehicle_filter' value='$(arg vehicle_filter)'/>
+-    <arg name='role_name' value='$(arg role_name)'/>
+-    <arg name='spawn_point' value='$(arg spawn_point)'/>
+-    <arg name='sensor_definition_file' value='$(arg sensor_definition_file)'/>
++  <include file='$(find carla_spawn_objects)/launch/carla_spawn_objects.launch' >
++    <arg name='objects_definition_file' value='$(arg sensor_definition_file)'/>
++    <arg name='spawn_point_ego_vehicle' value='$(arg spawn_point)'/>
++    <arg name='spawn_sensors_only' value='$(arg spawn_sensors_only)'/>
+   </include>
+
+   <group if='$(arg use_manual_control)'>
+@@ -53,4 +51,3 @@
+   </group>
+
+ </launch>
+-
+diff --git a/vehicle_gazebo_simulation_launcher/launch/rviz_test.launch b/vehicle_gazebo_simulation_launcher/launch/rviz_test.launch
+index 97225f8..8574844 100644
+--- a/vehicle_gazebo_simulation_launcher/launch/rviz_test.launch
++++ b/vehicle_gazebo_simulation_launcher/launch/rviz_test.launch
+@@ -8,7 +8,7 @@
+   <param name="use_gui" value="$(arg gui)"/>
+
+   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
++  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+-</launch>
+\ No newline at end of file
++</launch>
