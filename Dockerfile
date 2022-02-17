@@ -7,16 +7,16 @@ ENV USERNAME autoware
 
 WORKDIR /home/autoware
 
-# Update simulation repo to latest master.
-COPY --chown=autoware update_sim.patch /home/$USERNAME/Autoware
-RUN patch ./Autoware/autoware.ai.repos /home/$USERNAME/Autoware/update_sim.patch
+# Update autoware/simulation package version to latest.
+COPY --chown=autoware update_sim_version.patch /home/$USERNAME/Autoware
+RUN patch ./Autoware/autoware.ai.repos /home/$USERNAME/Autoware/update_sim_version.patch
 
-# Change code in simulation package.
-COPY --chown=autoware update_code.patch /home/$USERNAME/Autoware/src/autoware/simulation
+# Change code in autoware/simulation package.
+COPY --chown=autoware update_sim_code.patch /home/$USERNAME/Autoware/src/autoware/simulation
 RUN cd /home/$USERNAME/Autoware \
     && vcs import src < autoware.ai.repos \
     && cd /home/$USERNAME/Autoware/src/autoware/simulation \
-    && git apply update_code.patch
+    && git apply update_sim_code.patch
 
 # Compile with colcon build.
 RUN cd ./Autoware \
@@ -49,6 +49,13 @@ RUN pip install transforms3d simple-pid pygame networkx==2.2
 USER autoware
 
 RUN git clone -b '0.9.11' --recurse-submodules https://github.com/carla-simulator/ros-bridge.git
+
+# Update code in carla-ros-bridge package and fix the tf tree issue.
+# The fix has been introduced in latest version (since 0.9.12):
+# https://github.com/carla-simulator/ros-bridge/pull/570/commits/9f903cf43c4ef3dd0b909721e044c62a8796f841
+COPY --chown=autoware update_ros_bridge.patch /home/$USERNAME/ros-bridge
+RUN cd /home/$USERNAME/ros-bridge \
+    && git apply update_ros_bridge.patch
 
 # CARLA Autoware agent
 COPY --chown=autoware . ./carla-autoware
